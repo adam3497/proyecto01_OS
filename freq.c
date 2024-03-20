@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <wchar.h>
 
 #define CHAR_SET_SIZE 65536
@@ -21,13 +22,13 @@ void char_frequencies(wchar_t input_array[], int frequency_table[]) {
  * @param buffer: a pointer to the buffer where the characters are gonna be stored
  * @return: This function does not return 
 */
-void get_chars_from_file(const char *filename, wchar_t *buffer) {
+int get_chars_from_file(const char *filename, wchar_t *buffer) {
     FILE *file;
     size_t buffer_size = 0; // Current buffer size
     size_t total_size = 0; // Total buffer size
 
     // Open the file for reading
-    file = fopen(filename, "r"); // Open in text mode for wide character handling
+    file = fopen(filename, "rb"); // Open in text mode for wide character handling
     if (file == NULL) {
         perror("Error opening file");
         return 1;
@@ -54,8 +55,23 @@ void get_chars_from_file(const char *filename, wchar_t *buffer) {
 
     // Close the file
     fclose(file);
+
+    // Null-terminate the buffer
+    buffer = (wchar_t *)realloc(buffer, (total_size + 1) * sizeof(wchar_t));
+    buffer[total_size] = L'\0';
+
+    // Use the buffer here (e.g., print its content)
+    wprintf(L"File content:\n%s\n", buffer);
+
+    return 0;
 }
 
 int main() {
+    wchar_t *buffer = NULL;
+    int status = get_chars_from_file("input.txt", buffer);
 
+    if (status != 0) 
+        return 1;
+    
+    return 0;
 }
