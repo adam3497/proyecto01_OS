@@ -130,7 +130,7 @@ void HuffmanCodes(char data[], int freq[], int size) {
     printCodes(root, arr, top);
 }
 
-// Driver program to test above functions
+/* // Driver program to test above functions
 int main() {
     char data[] = { 'a', 'b', 'c', 'd', 'e', 'f', 'j'};
     int freq[] = { 5, 9, 120, 13, 16, 45, 98 };
@@ -138,4 +138,4 @@ int main() {
     printf("Huffman codes:\n");
     HuffmanCodes(data, freq, size);
     return 0;
-}
+} */
