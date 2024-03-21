@@ -55,5 +55,5 @@ dkms.conf
 .vscode
 
 # Test files and others
-test/*
+test
 
