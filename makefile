@@ -1,47 +1,20 @@
-# Makefile for compiling project
+# Objetivo predeterminado
+all: main
 
-# Compiler options
-CC = gcc
-CFLAGS = -Wall -Wextra -Werror -std=c11
+# Reglas para compilar archivos .c en archivos .o
+out/file_utils.o: utilities/file_utils.c
+	gcc -c $< -o $@
 
-# Directories
-SRCDIR_UTILITIES = utilities
-SRCDIR_HUFFMAN = huffman
-OBJDIR = out
-BINDIR = $(OBJDIR)
+out/freq.o: huffman/freq.c
+	gcc -c $< -o $@
 
-# Source files
-SRCS_UTILITIES = $(wildcard $(SRCDIR_UTILITIES)/*.c)
-SRCS_HUFFMAN = $(wildcard $(SRCDIR_HUFFMAN)/*.c)
-SRCS_MAIN = main.c
+out/main.o: main.c
+	gcc -c $< -o $@
 
-# Object files
-OBJS_UTILITIES = $(patsubst $(SRCDIR_UTILITIES)/%.c,$(OBJDIR)/%.o,$(SRCS_UTILITIES))
-OBJS_HUFFMAN = $(patsubst $(SRCDIR_HUFFMAN)/%.c,$(OBJDIR)/%.o,$(SRCS_HUFFMAN))
-OBJS_MAIN = $(patsubst %.c,$(OBJDIR)/%.o,$(SRCS_MAIN))
+# Regla para enlazar los archivos .o y generar el ejecutable
+main: out/file_utils.o out/freq.o out/main.o
+	gcc $^ -o $@
 
-# Output executable
-TARGET = $(BINDIR)/main.out
-
-.PHONY: all clean
-
-all: $(TARGET)
-
-$(TARGET): $(OBJS_UTILITIES) $(OBJS_HUFFMAN) $(OBJS_MAIN)
-    $(CC) $(CFLAGS) $^ -o $@
-
-$(OBJDIR)/%.o: $(SRCDIR_UTILITIES)/%.c | $(OBJDIR)
-    $(CC) $(CFLAGS) -c $< -o $@
-
-$(OBJDIR)/%.o: $(SRCDIR_HUFFMAN)/%.c | $(OBJDIR)
-    $(CC) $(CFLAGS) -c $< -o $@
-
-$(OBJDIR)/%.o: %.c | $(OBJDIR)
-    $(CC) $(CFLAGS) -c $< -o $@
-
-$(OBJDIR):
-    mkdir -p $(OBJDIR)
-
+# Regla para limpiar los archivos generados
 clean:
-    $(RM) -r $(OBJDIR)
-
+	rm -f out/*.o main
