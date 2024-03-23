@@ -17,4 +17,4 @@ main: out/file_utils.o out/freq.o out/main.o
 
 # Regla para limpiar los archivos generados
 clean:
-	rm -f out/*.o main
+	rm -f out/* main
