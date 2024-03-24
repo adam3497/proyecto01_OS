@@ -25,7 +25,6 @@ void char_frequencies(wchar_t *buffer, int freq_table[]) {
             freq_table[*ptr]++;
        /*  // Ignore spaces and line breaks
         if (*ptr != L' ' && *ptr != L'\n' && *ptr != L'\r') {
-            // Increment the frequency of the character
             freq_table[*ptr]++;
         } */
         ptr++; // Increment the pointer to move to the next character

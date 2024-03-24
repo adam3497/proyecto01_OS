@@ -20,5 +20,11 @@ int main() {
     // Write the wchar and its frequency to the output file
     write_wchars_to_file(output_file, freq_table);
 
+    // We first calculate the size of the freq table (only the characters' freq > 0)
+    int freq_table_size = calculateFreqTableSize(freq_table);
+
+    // Print the Huffman Tree generated
+    huffmanCodes(freq_table, freq_table_size);
+
     return 0;
 }
