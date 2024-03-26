@@ -276,27 +276,50 @@ void printCodes(struct MinHeapNode* root, int arr[], int top) {
 }
 
 /**
- * @brief Generates Huffman codes from a frequency table.
+ * @brief Generates Huffman codes from a Huffman tree.
  * 
- * Generates Huffman codes using the provided frequency table,
- * where each index represents a character and its value represents
- * the frequency.
+ * Generates Huffman codes using the provided Huffman tree,
+ * where each character's code is represented by a sequence
+ * of bits stored in the huffmanCodes array.
  * 
- * @param freq_table The frequency table containing the frequencies of characters.
- * @param size The size of the frequency table.
+ * @param node The current node in the Huffman tree.
+ * @param bits An array to store the bits of the Huffman code.
+ * @param idx The index indicating the current position in the bits array.
+ * @param huffmanCodes The array to store the generated Huffman codes.
  * 
- * @details The function first constructs a Huffman Tree using the provided
- * frequency table by calling the buildHuffmanTree function. This Huffman Tree
- * is built based on the frequencies of characters, where characters with higher
- * frequencies have shorter codes.
+ * @details The function traverses the Huffman tree recursively,
+ * assigning '0' to the left child nodes and '1' to the right
+ * child nodes. When a leaf node is encountered, the function
+ * saves the Huffman code for that character in the huffmanCodes
+ * array, where the first element represents the code length
+ * and subsequent elements store the bits of the code.
  */
-void huffmanCodes(int freq_table[], int size) {
-    // Construct the Huffman Tree using the provided frequency table
-    struct MinHeapNode* root = buildHuffmanTree(freq_table, size);
-     // Initialize an array to store the binary codes
-    int arr[100], top = 0;
-    // Generate and print Huffman codes using the Huffman Tree
-    printCodes(root, arr, top);
+void generateHuffmanCodes(struct MinHeapNode* node, int bits[], int idx, int huffmanCodes) {
+    // Check if the current node has left or child nodes
+    // If so, we assign 0 to left and 1 to right and make a recursive call to this function again
+    if (node->left) {
+        bits[idx] = 0;
+        generateHuffmanCodes(root->left, bits, idx + 1, huffmanCodes);
+    }
+
+    if (node->right) {
+        bits[idx] = 1;
+        generateHuffmanCodes(root->right, bits, idx + 1, huffmanCodes);
+    }
+
+    // If the current node is a leaf node, assign the Huffman code for that character
+    if (!(root->left) && !(root->right)) {
+        // We save at position 0 the length of the Huffman code for the current character
+        // This allows the decoder to know the length of the Huffman code for each character
+        // during decoding
+        huffmanCodes[node->data][0] = idx;
+        for (int i = 0; i < idx; ++i) {
+            // After the length of the code is saved at position 0
+            // The bits of the code are stored sequentially from the bits[] array
+            // into the array for the current character starting at position 1
+            huffmanCodes[root->data][i+1] = bits[i];
+        }
+    }
 }
 
 /**
@@ -343,6 +366,6 @@ int main() {
     int size = calculateFreqTableSize(freq_table);
     printf("size is %d\n", size);
     printf("Huffman codes:\n");
-    huffmanCodes(freq_table, size);
+    generateHuffmanCodes(freq_table, size);
     return 0;
 } */

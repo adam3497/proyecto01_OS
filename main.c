@@ -23,8 +23,16 @@ int main() {
     // We first calculate the size of the freq table (only the characters' freq > 0)
     int freq_table_size = calculateFreqTableSize(freq_table);
 
-    // Print the Huffman Tree generated
-    huffmanCodes(freq_table, freq_table_size);
+    // Build Huffman Tree from the frequency table
+    struct MinHeapNode* huffmanRoot = buildHuffmanTree(freq_table, freq_table_size);
+
+    // Huffman codes 2D array where the first array contains the character and the second array
+    // the length of the code and the code for that character
+    int huffmanCodes[CHAR_SET_SIZE][CHAR_SET_SIZE] = {0};
+    // An array where the Huffman code for each character is gonna be stored
+    int bits[CHAR_SET_SIZE];
+    // Generate Huffman codes for each character in the text file
+    generateHuffmanCodes(huffmanRoot, bits, 0, huffmanCodes);
 
     return 0;
 }
