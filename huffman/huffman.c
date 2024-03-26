@@ -3,6 +3,7 @@
 #include <wchar.h>
 
 #include "huffman.h"
+#include "../utilities/utils.h"
 
 
 /**
@@ -294,21 +295,21 @@ void printCodes(struct MinHeapNode* root, int arr[], int top) {
  * array, where the first element represents the code length
  * and subsequent elements store the bits of the code.
  */
-void generateHuffmanCodes(struct MinHeapNode* node, int bits[], int idx, int huffmanCodes) {
+void generateHuffmanCodes(struct MinHeapNode* node, int bits[], int idx, int huffmanCodes[][CHAR_SET_SIZE]) {
     // Check if the current node has left or child nodes
     // If so, we assign 0 to left and 1 to right and make a recursive call to this function again
     if (node->left) {
         bits[idx] = 0;
-        generateHuffmanCodes(root->left, bits, idx + 1, huffmanCodes);
+        generateHuffmanCodes(node->left, bits, idx + 1, huffmanCodes);
     }
 
     if (node->right) {
         bits[idx] = 1;
-        generateHuffmanCodes(root->right, bits, idx + 1, huffmanCodes);
+        generateHuffmanCodes(node->right, bits, idx + 1, huffmanCodes);
     }
 
     // If the current node is a leaf node, assign the Huffman code for that character
-    if (!(root->left) && !(root->right)) {
+    if (!(node->left) && !(node->right)) {
         // We save at position 0 the length of the Huffman code for the current character
         // This allows the decoder to know the length of the Huffman code for each character
         // during decoding
@@ -317,7 +318,7 @@ void generateHuffmanCodes(struct MinHeapNode* node, int bits[], int idx, int huf
             // After the length of the code is saved at position 0
             // The bits of the code are stored sequentially from the bits[] array
             // into the array for the current character starting at position 1
-            huffmanCodes[root->data][i+1] = bits[i];
+            huffmanCodes[node->data][i+1] = bits[i];
         }
     }
 }

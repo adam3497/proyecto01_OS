@@ -1,6 +1,8 @@
 #ifndef HUFFMAN_H
 #define HUFFMAN_H
 
+#include "../utilities/utils.h"
+
 #define MAX_FREQ_TABLE_SIZE 65536
 
 // ******** Frequency functions ********
@@ -194,7 +196,7 @@ struct MinHeapNode* buildHuffmanTree(int freq_table[], int size);
  * array, where the first element represents the code length
  * and subsequent elements store the bits of the code.
  */
-void generateHuffmanCodes(struct MinHeapNode* node, int bits[], int idx, int huffmanCodes);
+void generateHuffmanCodes(struct MinHeapNode* node, int bits[], int idx, int huffmanCodes[][CHAR_SET_SIZE]);
 
 /**
  * @brief Calculates the number of characters with non-zero frequency in the frequency table.
