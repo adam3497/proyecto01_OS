@@ -20,4 +20,4 @@ main: out/file_utils.o out/freq.o out/huffman.o out/main.o
 
 # Regla para limpiar los archivos generados
 clean:
-	rm -f out/* main
+	rm -f out/*.o main
