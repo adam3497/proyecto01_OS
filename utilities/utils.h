@@ -1,8 +1,10 @@
-#ifndef UTILS_h
+#ifndef UTILS_H
 #define UTILS_H
 
 #define INITIAL_BUFFER_SIZE 1024 // size for the buffer to read
 #define CHAR_SET_SIZE 65536
+
+#include "../huffman/huffman.h"
 
 // ******** File Utils ********
 
@@ -31,5 +33,10 @@ void get_wchars_from_file(const char *filename, wchar_t **buffer);
  * followed by a newline character '\n'.
 */
 void write_wchars_to_file(const char *filename, int freq_table[]);
+
+/**
+ * 
+*/
+void write_huffman_codes_to_file(const char* filename, struct HuffmanCode* huffmanCodes[]);
 
 #endif // !UTILS_H

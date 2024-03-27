@@ -88,7 +88,7 @@ void write_wchars_to_file(const char *filename, int freq_table[]) {
     file = fopen(filename, "w, ccs=UTF-8");
     if (file == NULL) {
         perror("Error opening output file");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     // Write content to the output file
@@ -101,5 +101,36 @@ void write_wchars_to_file(const char *filename, int freq_table[]) {
 
     // Close the output file
     fclose(file);
-    printf("Data written to file successfully\n");
+    printf("Frequencies written to file successfully\n");
+}
+
+void write_huffman_codes_to_file(const char* filename, struct HuffmanCode* huffmanCodes[]) {
+    FILE *file;
+
+    // Set the locale to handle wide characters properly
+    setlocale(LC_ALL, "");
+
+    // Open the output file
+    file = fopen(filename, "w, ccs=UTF-8");
+    if (file == NULL) {
+        perror("Error opening output file");
+        exit(EXIT_FAILURE);
+    }
+
+    // Write content to the output file
+    for (int i = 0; i < MAX_FREQ_TABLE_SIZE; i++) {
+        if (huffmanCodes[i] != NULL) {
+            // Write each character (converted to wchar_t) and its frequency
+            fwprintf(file, L"%lc: ", (wchar_t)i);
+            for (int j = 0; j < huffmanCodes[i]->length; j++) {
+                fwprintf(file, L"%d", huffmanCodes[i]->code[j]);
+            } 
+            fwprintf(file, L"\n");
+        }
+    }
+
+    // Close the output file
+    fclose(file);
+    printf("Huffman codes written to file successfully\n");
+    
 }
