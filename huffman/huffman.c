@@ -3,8 +3,6 @@
 #include <wchar.h>
 
 #include "huffman.h"
-#include "../utilities/utils.h"
-
 
 /**
  * @brief Creates a new Min Heap node with the specified data and frequency.
@@ -295,7 +293,11 @@ void printCodes(struct MinHeapNode* root, int arr[], int top) {
  * array, where the first element represents the code length
  * and subsequent elements store the bits of the code.
  */
-void generateHuffmanCodes(struct MinHeapNode* node, int bits[], int idx, int huffmanCodes[][CHAR_SET_SIZE]) {
+void generateHuffmanCodes(struct MinHeapNode* node, int bits[], int idx, struct HuffmanCode* huffmanCodes[]) {
+    // Base case
+    if (node == NULL) {
+        return;
+    }
     // Check if the current node has left or child nodes
     // If so, we assign 0 to left and 1 to right and make a recursive call to this function again
     if (node->left) {
@@ -310,15 +312,17 @@ void generateHuffmanCodes(struct MinHeapNode* node, int bits[], int idx, int huf
 
     // If the current node is a leaf node, assign the Huffman code for that character
     if (!(node->left) && !(node->right)) {
-        // We save at position 0 the length of the Huffman code for the current character
-        // This allows the decoder to know the length of the Huffman code for each character
-        // during decoding
-        huffmanCodes[node->data][0] = idx;
+        // We initialize the struct that will contain the Huffman code
+        huffmanCodes[node->data] = (struct HuffmanCode*)malloc(sizeof(struct HuffmanCode));
+        if (huffmanCodes[node->data] == NULL) {
+            perror("Memory allocation failed. Couldn't reserve memory for the HuffmanCode struct");
+            exit(EXIT_FAILURE);
+        }
+        // Set the length of the Huffman code
+        huffmanCodes[node->data]->length = idx;
         for (int i = 0; i < idx; ++i) {
-            // After the length of the code is saved at position 0
-            // The bits of the code are stored sequentially from the bits[] array
-            // into the array for the current character starting at position 1
-            huffmanCodes[node->data][i+1] = bits[i];
+            // Store the bits of the code in the HuffmanCode struct's code array
+            huffmanCodes[node->data]->code[i] = bits[i];
         }
     }
 }

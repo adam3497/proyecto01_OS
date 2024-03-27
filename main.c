@@ -6,7 +6,7 @@
 #include "huffman/huffman.h"
 
 int main() {
-    const char *input_file = "books/A Christmas Carol in Prose; Being a Ghost Story of Christmas by Charles Dickens (12062).txt";
+    const char *input_file = "books/A Christmas Carol in Prose; Being a Ghost Story of Christmas by Charles Dickens (12287).txt";
     const char *output_file = "test/output.txt";
     wchar_t *buffer = NULL;
     get_wchars_from_file(input_file, &buffer);
@@ -28,11 +28,14 @@ int main() {
 
     // Huffman codes 2D array where the first array contains the character and the second array
     // the length of the code and the code for that character
-    int huffmanCodes[CHAR_SET_SIZE][CHAR_SET_SIZE] = {0};
+    struct HuffmanCode* huffmanCodesArray[MAX_FREQ_TABLE_SIZE] = {NULL};
     // An array where the Huffman code for each character is gonna be stored
-    int bits[CHAR_SET_SIZE];
+    int bits[MAX_CODE_SIZE];
     // Generate Huffman codes for each character in the text file
-    generateHuffmanCodes(huffmanRoot, bits, 0, huffmanCodes);
+    generateHuffmanCodes(huffmanRoot, bits, 0, huffmanCodesArray);
+
+    // Write the Huffman Codes to file
+    write_huffman_codes_to_file("test/output_huffman_tree.txt", huffmanCodesArray);
 
     return 0;
 }
