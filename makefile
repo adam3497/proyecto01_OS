@@ -1,5 +1,5 @@
 # Objetivo predeterminado
-all: main
+all: clean main run
 
 # Reglas para compilar archivos .c en archivos .o
 out/huffman.o: huffman/huffman.c
@@ -21,3 +21,8 @@ main: out/huffman.o out/freq.o out/file_utils.o out/main.o
 # Regla para limpiar los archivos generados
 clean:
 	rm -f out/*.o main
+	rm -f out/frequencies/*
+	rm -f out/bins/*
+
+run:
+	./main
