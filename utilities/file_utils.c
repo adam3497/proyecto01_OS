@@ -305,8 +305,11 @@ void decompress_and_write_to_file(const char* binary_file, const char* output_fi
     struct MinHeapNode* huffmanRoot = deserialize_huffman_tree(input_file);
     struct MinHeapNode* currentNode = huffmanRoot;
 
+    // Set the locale to handle wide characters properly
+    setlocale(LC_ALL, "");
+    
     // Open output file
-    FILE *output_file = fopen(output_file_name, "wb");
+    FILE *output_file = fopen(output_file_name, "w, ccs=UTF-8");
     if (output_file == NULL) {
         perror("Error opening output file");
         fclose(input_file);

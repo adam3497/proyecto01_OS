@@ -88,5 +88,6 @@ int main() {
     }
 
     closedir(dir);
+    //decompress_and_write_to_file("out/bins/A Christmas Carol in Prose; Being a Ghost Story of Christmas by Charles Dickens (12287).bin", "test/decompress.txt");
     return EXIT_SUCCESS;
 }
