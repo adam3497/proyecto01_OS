@@ -4,7 +4,12 @@
 #define INITIAL_BUFFER_SIZE 1024 // size for the buffer to read
 #define CHAR_SET_SIZE 65536
 
+#define TOTAL_BOOKS 98 
+#define MAX_BOOK_NAME_LENGTH 256 
+
 #include "../huffman/huffman.h"
+
+
 
 // ******** File Utils ********
 
@@ -66,5 +71,13 @@ void read_metadata(const char* filename, size_t* size, FILE* file);
 void decompress_and_write_to_file(const char* binary_file, const char* output_file_name);
 
 
+
+struct EncodeArgs {
+    char books_paths[TOTAL_BOOKS][MAX_BOOK_NAME_LENGTH];
+    char freqs_paths[TOTAL_BOOKS][MAX_BOOK_NAME_LENGTH];
+    char bins_paths[TOTAL_BOOKS][MAX_BOOK_NAME_LENGTH];
+};
+
+struct EncodeArgs* getAllPaths(const char* booksFolder, const char* freqsFolder, const char* binsFolder);
 
 #endif // !UTILS_H

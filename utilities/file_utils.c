@@ -3,6 +3,7 @@
 #include <locale.h>
 #include <wchar.h>
 #include <string.h>
+#include <dirent.h>
 
 #include "utils.h"
 
@@ -64,7 +65,7 @@ void get_wchars_from_file(const char *filename, wchar_t **buffer) {
 
     // Close the file
     fclose(file);
-    printf("Data read from input file\n");
+    printf("- Data read from input file\n");
 }
 
 /**
@@ -102,7 +103,7 @@ void write_wchars_to_file(const char *filename, int freq_table[]) {
 
     // Close the output file
     fclose(file);
-    printf("Frequencies written to file successfully\n");
+    printf("- Frequencies written to file successfully\n");
 }
 
 void write_huffman_codes_to_file(const char* filename, struct HuffmanCode* huffmanCodes[]) {
@@ -132,7 +133,7 @@ void write_huffman_codes_to_file(const char* filename, struct HuffmanCode* huffm
 
     // Close the output file
     fclose(file);
-    printf("Huffman codes written to file successfully\n");
+    printf("- Huffman codes written to file successfully\n");
     
 }
 
@@ -146,7 +147,7 @@ void encode_file(wchar_t *buffer, const char* filename, struct HuffmanCode* huff
         exit(EXIT_FAILURE);
     }
 
-    printf("Encoding file with Huffman codes\n");
+    printf("- Encoding file with Huffman codes\n");
 
     // Iterate through the wchar_t *buffer
     wchar_t *ptr = buffer;
@@ -158,7 +159,7 @@ void encode_file(wchar_t *buffer, const char* filename, struct HuffmanCode* huff
     }
 
     fclose(file);
-    printf("File encoded successfully\n");
+    printf("- File encoded successfully\n");
 
 }
 
@@ -179,7 +180,7 @@ void serialize_huffman_tree(struct MinHeapNode* root, FILE* file) {
 }
 
 void write_metadata(const char* filename, size_t size, FILE* file) {
-    printf("Writing metadata to the binary file\n");
+    printf("- Writing metadata to the binary file\n");
     // Write filename length and filename string
     size_t filename_length = strlen(filename);
     fwrite(&filename_length, sizeof(size_t), 1, file);
@@ -187,7 +188,7 @@ void write_metadata(const char* filename, size_t size, FILE* file) {
 
     // Write file size
     fwrite(&size, sizeof(size_t), 1, file);
-    printf("Metadata written to binary file\n");
+    printf("- Metadata written to binary file\n");
 }
 
 void write_encoded_bits_to_file(wchar_t *buffer, size_t buffer_size, const char* filename, struct MinHeapNode* huffmanRoot, struct HuffmanCode* huffmanCodes[]) {
@@ -200,12 +201,12 @@ void write_encoded_bits_to_file(wchar_t *buffer, size_t buffer_size, const char*
     // Write metadata (filename and size) to the output file;
     write_metadata(filename, buffer_size, output_file);
 
-    printf("Serializing Huffman tree\n");
+    printf("- Serializing Huffman tree\n");
     // Serialize Huffman tree and write it to the output file
     serialize_huffman_tree(huffmanRoot, output_file);
-    printf("Huffman tree serialized\n");
+    printf("- Huffman tree serialized\n");
 
-    printf("Encoding file...\n");
+    printf("- Encoding file...\n");
     // Compress data using Huffman codes and write it to the output file
     unsigned char buffer_byte = 0; // Buffer to store bits before writing to file
     int bit_count = 0; // Number of bits currently buffered
@@ -237,7 +238,7 @@ void write_encoded_bits_to_file(wchar_t *buffer, size_t buffer_size, const char*
         fputc(buffer_byte, output_file);
     }
 
-    printf("File encoded\n");
+    printf("- File encoded\n");
     // Close output file
     fclose(output_file);
 }
@@ -286,7 +287,7 @@ void read_metadata(const char* filename, size_t* size, FILE* file) {
 }
 
 void decompress_and_write_to_file(const char* binary_file, const char* output_file_name) {
-    printf("Decompressing binary file\n");
+    printf("- Decompressing binary file\n");
     // Open binary file 
     FILE *input_file = fopen(binary_file, "rb");
     if (input_file == NULL) {
@@ -298,8 +299,8 @@ void decompress_and_write_to_file(const char* binary_file, const char* output_fi
     size_t file_size;
     char filename[256];
     read_metadata(filename, &file_size, input_file);
-    printf("File name: %c\n", filename);
-    printf("File size: %zu\n", file_size);
+    printf("- File name: %c\n", filename);
+    printf("- File size: %zu\n", file_size);
 
     // Deserialize Huffman Tree from the binary file
     struct MinHeapNode* huffmanRoot = deserialize_huffman_tree(input_file);
@@ -346,4 +347,49 @@ void decompress_and_write_to_file(const char* binary_file, const char* output_fi
     fclose(output_file);
     // Close input file
     fclose(input_file);
+}
+
+struct EncodeArgs* getAllPaths(const char* booksFolder, const char* freqsFolder, const char* binsFolder){
+    
+    // Array dinámico para almacenar los nombres de los libros
+    int fileCounter = 0;
+    struct EncodeArgs* args = (struct EncodeArgs*) malloc(sizeof(struct EncodeArgs));
+        
+    // Paths
+    DIR* dir;
+    struct dirent* entrada;
+
+    dir = opendir(booksFolder);
+    if (dir == NULL) {
+        perror("Error al abrir el directorio");
+    }
+
+    while ((entrada = readdir(dir)) != NULL && fileCounter < TOTAL_BOOKS) {
+        if (strstr(entrada->d_name, ".txt") != NULL) {
+            // Book path
+            char bookPath[MAX_BOOK_NAME_LENGTH];
+            snprintf(bookPath, sizeof(bookPath), "%s/%s", booksFolder, entrada->d_name);
+            strncpy(args->books_paths[fileCounter], bookPath, MAX_BOOK_NAME_LENGTH - 1);
+            args->books_paths[fileCounter][MAX_BOOK_NAME_LENGTH - 1] = '\0';
+
+            // Frequencies output path
+            char frequenciesPath[MAX_BOOK_NAME_LENGTH];
+            snprintf(frequenciesPath, sizeof(frequenciesPath), "%s/%s", freqsFolder, entrada->d_name);
+            strncpy(args->freqs_paths[fileCounter], frequenciesPath, MAX_BOOK_NAME_LENGTH - 1);
+            args->freqs_paths[fileCounter][MAX_BOOK_NAME_LENGTH - 1] = '\0';
+
+            // Remove file extension
+            int len = strlen(entrada->d_name);
+            entrada->d_name[len-4] = '\0';
+
+            char binariesPath[MAX_BOOK_NAME_LENGTH];
+            snprintf(binariesPath, sizeof(binariesPath), "%s/%s.bin", binsFolder, entrada->d_name);
+            strncpy(args->bins_paths[fileCounter], binariesPath, MAX_BOOK_NAME_LENGTH - 1);
+            args->bins_paths[fileCounter][MAX_BOOK_NAME_LENGTH - 1] = '\0';
+            
+            fileCounter++;
+        }
+    }
+    closedir(dir);
+    return args;
 }
