@@ -56,3 +56,4 @@ dkms.conf
 
 # Test files and others
 test
+out
