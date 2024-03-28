@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
-#include <dirent.h>
+
 #include "utilities/utils.h"
 #include "huffman/huffman.h"
 
@@ -11,15 +11,14 @@ typedef struct {
     long size;
 } MetadataArchivo;
 
-void encode(const char *input_file, const char *freq_file, const char *bin_file){
+void encode(char *input_file, char *freq_file, char *bin_file){
 
+    // Fill the buffer
     wchar_t *buffer = NULL;
     get_wchars_from_file(input_file, &buffer);
 
-    // Initialize the freq_table with zeros
-    int freq_table[CHAR_SET_SIZE] = {0};
-
     // Extract the frequencies for each character in the text file
+    int freq_table[CHAR_SET_SIZE] = {0};
     char_frequencies(buffer, freq_table);
     
     // Write the wchar and its frequency to the output file
@@ -47,47 +46,22 @@ void encode(const char *input_file, const char *freq_file, const char *bin_file)
 }
 
 int main() {
-    DIR* dir;
-    struct dirent* entrada;
-    const char* frequenciesFolder = "out/frequencies"; // Ruta de la carpeta, ajustar según sea necesario
-    const char* binariesFolder = "out/bins"; // Ruta de la carpeta, ajustar según sea necesario
-    const char* resourceFolder = "books"; // Ruta de la carpeta, ajustar según sea necesario
-    const char* extension = ".txt";
+    // Folder Paths
+    const char* booksFolder = "books";
+    const char* freqsFolder = "out/frequencies";
+    const char* binsFolder = "out/bins";
+
+    // Get encoding paths in a lists
+    struct EncodeArgs *MyArgs = getAllPaths(booksFolder, freqsFolder, binsFolder);
     
-    dir = opendir(resourceFolder);
-    if (dir == NULL) {
-        perror("Error al abrir el directorio");
-        return EXIT_FAILURE;
+    for (int i = 0; i < 10; i++) {
+        printf("[%d] CODING : %s\n", i+1, MyArgs->books_paths[i]);
+        encode(MyArgs->books_paths[i], MyArgs->freqs_paths[i], MyArgs->bins_paths[i]);
+        printf("\n");
     }
 
-    while ((entrada = readdir(dir)) != NULL) {
-        // Verificar si el archivo termina en .txt
-        if (strstr(entrada->d_name, extension) != NULL) {
-            
-            // Book path
-            char bookPath[1024];
-            snprintf(bookPath, sizeof(bookPath), "%s/%s", resourceFolder, entrada->d_name);
-
-            // Frequencies output path
-            char frequenciesPath[1024];
-            snprintf(frequenciesPath, sizeof(frequenciesPath), "%s/%s", frequenciesFolder, entrada->d_name);
-
-            // Remove file extension
-            int len = strlen(entrada->d_name);
-            entrada->d_name[len-4] = '\0';
-
-            char binariesPath[1024];
-            snprintf(binariesPath, sizeof(binariesPath), "%s/%s.bin", binariesFolder, entrada->d_name);
-
-            printf("Codificando: %s\n", bookPath);
-            encode(bookPath, frequenciesPath, binariesPath);
-            // Deserialize the binary file
-            //decompress_and_write_to_file(binariesPath, "test/decompress.txt");
-            printf("\n");
-        }
-    }
-
-    closedir(dir);
-    //decompress_and_write_to_file("out/bins/A Christmas Carol in Prose; Being a Ghost Story of Christmas by Charles Dickens (12287).bin", "test/decompress.txt");
+    // Liberar la memoria asignada en getArgs()
+    free(MyArgs);
+    
     return EXIT_SUCCESS;
 }
