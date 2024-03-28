@@ -37,5 +37,15 @@ int main() {
     // Write the Huffman Codes to file
     write_huffman_codes_to_file("test/output_huffman_tree.txt", huffmanCodesArray);
 
+    encode_file(buffer, "test/file_encoded.txt", huffmanCodesArray);
+
+    // Write the Huffman codes, Huffman Tree and metadata to a binary file
+    size_t buffer_size = wcslen(buffer);
+    printf("Buffer size: %zu\n", buffer_size);
+    write_encoded_bits_to_file(buffer, buffer_size, "test/compressed.bin", huffmanRoot, huffmanCodesArray);
+
+    // Deserialize the binary file
+    decompress_and_write_to_file("test/compressed.bin", "test/decompress.txt");
+    
     return 0;
 }
