@@ -52,7 +52,7 @@ void encode_file(wchar_t *buffer, const char* filename, struct HuffmanCode* huff
 /**
  * 
 */
-void write_encoded_bits_to_file(wchar_t *buffer, size_t buffer_size, const char* filename, struct MinHeapNode* huffmanRoot, struct HuffmanCode* huffmanCodes[]);
+void write_encoded_bits_to_file(wchar_t *buffer, size_t buffer_size, const char* filename, struct MinHeapNode* huffmanRoot, struct HuffmanCode* huffmanCodes[], FILE *output_file);
 
 /**
  * 
@@ -68,16 +68,16 @@ void read_metadata(const char* filename, size_t* size, FILE* file);
  * 
  * 
 */
-void decompress_and_write_to_file(const char* binary_file, const char* output_file_name);
+void decompress_and_write_to_file(FILE *source, const char *output_path);
 
 
 
 struct EncodeArgs {
-    char books_paths[TOTAL_BOOKS][MAX_BOOK_NAME_LENGTH];
-    char freqs_paths[TOTAL_BOOKS][MAX_BOOK_NAME_LENGTH];
-    char bins_paths[TOTAL_BOOKS][MAX_BOOK_NAME_LENGTH];
+    char books[TOTAL_BOOKS][MAX_BOOK_NAME_LENGTH];
+    char freqs[TOTAL_BOOKS][MAX_BOOK_NAME_LENGTH];
+    char decodes[TOTAL_BOOKS][MAX_BOOK_NAME_LENGTH];
 };
 
-struct EncodeArgs* getAllPaths(const char* booksFolder, const char* freqsFolder, const char* binsFolder);
+struct EncodeArgs* getAllPaths(const char* booksFolder);
 
 #endif // !UTILS_H

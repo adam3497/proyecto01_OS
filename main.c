@@ -11,7 +11,7 @@ typedef struct {
     long size;
 } MetadataArchivo;
 
-void encode(char *input_file, char *freq_file, char *bin_file){
+void encode(char *input_file, char *freq_file, FILE *binary_output){
 
     // Fill the buffer
     wchar_t *buffer = NULL;
@@ -42,26 +42,46 @@ void encode(char *input_file, char *freq_file, char *bin_file){
 
     // Write the Huffman Codes to file    
     size_t buffer_size = wcslen(buffer);
-    write_encoded_bits_to_file(buffer, buffer_size, bin_file, huffmanRoot, huffmanCodesArray);
+    write_encoded_bits_to_file(buffer, buffer_size, input_file, huffmanRoot, huffmanCodesArray, binary_output);
 }
 
 int main() {
     // Folder Paths
     const char* booksFolder = "books";
-    const char* freqsFolder = "out/frequencies";
-    const char* binsFolder = "out/bins";
+    const char* out = "out/bin/compressed.bin";
 
-    // Get encoding paths in a lists
-    struct EncodeArgs *MyArgs = getAllPaths(booksFolder, freqsFolder, binsFolder);
-    
-    for (int i = 0; i < 10; i++) {
-        printf("[%d] CODING : %s\n", i+1, MyArgs->books_paths[i]);
-        encode(MyArgs->books_paths[i], MyArgs->freqs_paths[i], MyArgs->bins_paths[i]);
+    int runs = TOTAL_BOOKS;
+
+    FILE *binary_output = fopen(out, "wb");
+    if (binary_output == NULL) {
+        perror("Error opening output binary file");
+        exit(EXIT_FAILURE);
+    }
+
+    // Set for every book in books folder
+    struct EncodeArgs *paths = getAllPaths(booksFolder);
+
+
+    // Encode
+    for (int i = 0; i < runs; i++) {
+        printf("[%d] CODING : %s\n", i+1, paths->books[i]);
+        encode(paths->books[i], paths->freqs[i], binary_output);
         printf("\n");
     }
 
-    // Liberar la memoria asignada en getArgs()
-    free(MyArgs);
+    fclose(binary_output);
     
+    FILE *binary_source = fopen(out, "rb");
+
+    // Decode 
+    for (int i = 0; i < runs; i++) {
+        printf("[%d] DECODING : %s\n", i+1, paths->books[i]);
+        decompress_and_write_to_file(binary_source, paths->decodes[i]);
+        printf("\n");
+    }
+
+    // Liberar la memoria asignada
+    fclose(binary_source);
+    free(paths);
     return EXIT_SUCCESS;
 }

@@ -1,2 +1,2 @@
 sudo dnf install gcc gdb make cmake
-mkdir out/bins out/frequencies
+mkdir out/bin out/decodes out/frequencies out/objects
