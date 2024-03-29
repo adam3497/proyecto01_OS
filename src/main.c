@@ -6,10 +6,6 @@
 #include "utilities/utils.h"
 #include "huffman/huffman.h"
 
-typedef struct {
-    char file_name[200];
-    long size;
-} MetadataArchivo;
 
 void encode(char *input_file, char *freq_file, FILE *binary_output){
 
