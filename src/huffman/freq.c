@@ -17,7 +17,7 @@
  * of each non-space/non-line-break character in the freq_table array.
  */
 void char_frequencies(wchar_t *buffer, int freq_table[]) {
-    printf("Extracting frequencies from buffer\n");
+    printf("- Extracting frequencies from buffer\n");
     // Iterate through the wchar_t buffer
     wchar_t *ptr = buffer;
     while (*ptr != L'\0') {
@@ -29,5 +29,5 @@ void char_frequencies(wchar_t *buffer, int freq_table[]) {
         } */
         ptr++; // Increment the pointer to move to the next character
     }
-    printf("Frequencies extracted from buffer\n");
+    printf("- Frequencies extracted from buffer\n");
 }

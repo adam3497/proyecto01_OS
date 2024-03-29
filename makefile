@@ -1,28 +1,29 @@
 # Objetivo predeterminado
-all: clean main run
+all: clean src/main run
 
 # Reglas para compilar archivos .c en archivos .o
-out/huffman.o: huffman/huffman.c
+out/objects/huffman.o: src/huffman/huffman.c
 	gcc -c $< -o $@
 
-out/freq.o: huffman/freq.c
+out/objects/freq.o: src/huffman/freq.c
 	gcc -c $< -o $@
 
-out/file_utils.o: utilities/file_utils.c
+out/objects/file_utils.o: src/utilities/file_utils.c
 	gcc -c $< -o $@
 
-out/main.o: main.c
+out/objects/main.o: src/main.c
 	gcc -c $< -o $@
 
 # Regla para enlazar los archivos .o y generar el ejecutable
-main: out/huffman.o out/freq.o out/file_utils.o out/main.o
+src/main: out/objects/huffman.o out/objects/freq.o out/objects/file_utils.o out/objects/main.o
 	gcc $^ -o $@
 
 # Regla para limpiar los archivos generados
 clean:
-	rm -f out/*.o main
 	rm -f out/frequencies/*
 	rm -f out/bins/*
+	rm -f out/decodes/*
+	rm -f out/objects/*.o
 
 run:
-	./main
+	src/./main
