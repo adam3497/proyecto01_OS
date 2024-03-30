@@ -1,0 +1,1 @@
+gcc src/test/test.c -o src/test/test_out && src/test/./test_out

@@ -289,7 +289,7 @@ void read_metadata(const char* filename, size_t* size, FILE* file) {
 
     fread(filename_buffer, sizeof(char), filename_length, file);
     filename_buffer[filename_length] = '\0';
-
+    
     strcpy((char *) filename, filename_buffer);
     free(filename_buffer);
 
