@@ -19,7 +19,7 @@ void encode(char *input_file, char *freq_file, FILE *binary_output){
     char_frequencies(buffer, freq_table);
     
     // Write the wchar and its frequency to the output file
-    write_wchars_to_file(freq_file, freq_table);
+    //write_wchars_to_file(freq_file, freq_table);
 
     // We first calculate the size of the freq table (only the characters' freq > 0)
     int freq_table_size = calculateFreqTableSize(freq_table);
@@ -27,8 +27,7 @@ void encode(char *input_file, char *freq_file, FILE *binary_output){
     // Build Huffman Tree from the frequency table
     struct MinHeapNode* huffmanRoot = buildHuffmanTree(freq_table, freq_table_size);
 
-    // Huffman codes 2D array where the first array contains the character and the second array
-    // the length of the code and the code for that character
+    // Huffman codes struct array, where each position represents a character and the struct contains its code and code length
     struct HuffmanCode* huffmanCodesArray[MAX_FREQ_TABLE_SIZE] = {NULL};
     
     // An array where the Huffman code for each character is gonna be stored
@@ -45,7 +44,7 @@ void encode(char *input_file, char *freq_file, FILE *binary_output){
 int main() {
     // Folder Paths
     const char* booksFolder = "books";
-    const char* out = "out/bin/compressed.bin";
+    const char* out = "out/bin/books_compressed_serial.bin";
 
     int runs = TOTAL_BOOKS;
 

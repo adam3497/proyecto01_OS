@@ -353,6 +353,19 @@ int calculateFreqTableSize(int freq_table[]) {
     return size;
 }
 
+void free_huffman_tree(struct MinHeapNode* root) {
+    if (root == NULL) {
+        return;
+    }
+
+    // Recursively free the left and right subtrees
+    free_huffman_tree(root->left);
+    free_huffman_tree(root->right);
+
+    // Free the memory allocated for the current node
+    free(root);
+}
+
 /* // Driver program to test above functions
 int main() {
     // Testing buffer

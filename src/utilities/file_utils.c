@@ -195,7 +195,18 @@ void write_metadata(const char* filename, size_t size, FILE* file) {
     printf("- Metadata written to binary file\n");
 }
 
-void write_encoded_bits_to_file(wchar_t *buffer, size_t buffer_size, const char* filename, struct MinHeapNode* huffmanRoot, struct HuffmanCode* huffmanCodes[], FILE *output_file) {
+const char* extract_filename(const char* filepath) {
+    const char* filename = filepath;
+    const char* last_slash = strrchr(filepath, '/'); // Find the last occurrence of '/'
+    if (last_slash != NULL) {
+        filename = last_slash + 1; // Move pointer to the last character after the last '/'
+    }
+    return filename;
+}
+
+void write_encoded_bits_to_file(wchar_t *buffer, size_t buffer_size, const char* filepath, struct MinHeapNode* huffmanRoot, struct HuffmanCode* huffmanCodes[], FILE *output_file) {
+    // Extract the name for the current file
+    const char* filename = extract_filename(filepath);
     
     // Write metadata (filename and size) to the output file;
     write_metadata(filename, buffer_size, output_file);
@@ -276,25 +287,41 @@ struct MinHeapNode* deserialize_huffman_tree(FILE* file) {
 // Function to read metadata (filename and size) from the binary file
 void read_metadata(const char* filename, size_t* size, FILE* file) {
     
-    // Read filename length and filename string
+    // Read filename length
     size_t filename_length;
-    fread(&filename_length, sizeof(size_t), 1, file);
-    
-    char* filename_buffer = (char*)malloc((filename_length + 1) * sizeof(char));
-
-    if (filename_buffer == NULL) {
-        perror("Error allocating memory for filename buffer");
+    if (fread(&filename_length, sizeof(size_t), 1, file) != 1) {
+        perror("- Error reading filename length");
         exit(EXIT_FAILURE);
     }
 
-    fread(filename_buffer, sizeof(char), filename_length, file);
+    // Ensure the filename length is reasonable
+    if (filename_length == 0 || filename_length > MAX_BOOK_NAME_LENGTH) {
+        fprintf(stderr, "- Invalid filename length: %zu\n", filename_length);
+        exit(EXIT_FAILURE);
+    }
+    
+    // Allocate memory for filename buffer
+    char* filename_buffer = (char*)malloc((filename_length + 1) * sizeof(char));
+    if (filename_buffer == NULL) {
+        perror("- Error allocating memory for filename buffer");
+        exit(EXIT_FAILURE);
+    }
+
+    // Read filename from file
+    if (fread(filename_buffer, sizeof(char), filename_length, file) != filename_length) {
+        perror("- Error reading filename from file");
+        exit(EXIT_FAILURE);
+    }
     filename_buffer[filename_length] = '\0';
+
+    // Read file size
+    if (fread(size, sizeof(size_t), 1, file) != 1) {
+        perror("- Error reading file size");
+        exit(EXIT_FAILURE);
+    }
     
     strcpy((char *) filename, filename_buffer);
     free(filename_buffer);
-
-    // Read file size
-    fread(size, sizeof(size_t), 1, file);
 }
 
 void decompress_and_write_to_file(FILE *source, const char *output_path) {
@@ -357,9 +384,11 @@ void decompress_and_write_to_file(FILE *source, const char *output_path) {
         }
     }
     
+    free_huffman_tree(huffmanRoot);
     // Assert end of usage 
     fclose(output_file);
 }
+
 
 struct EncodeArgs* getAllPaths(const char* booksFolder){
     

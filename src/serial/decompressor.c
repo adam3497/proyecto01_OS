@@ -4,12 +4,13 @@
 #include <wchar.h>
 
 #include "../utilities/file_utils.c"
+#include "../huffman/huffman.c"
 
 
 int main() {
     // Folder Paths
     const char* booksFolder = "books";
-    const char* out = "out/bin/compressed.bin";
+    const char* out = "out/bin/books_compressed_serial.bin";
     
     FILE *binary_source = fopen(out, "rb");
 

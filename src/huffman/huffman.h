@@ -215,5 +215,10 @@ void generateHuffmanCodes(struct MinHeapNode* node, int bits[], int idx, struct 
  */
 int calculateFreqTableSize(int freq_table[]);
 
+/**
+ * 
+*/
+void free_huffman_tree(struct MinHeapNode* root);
+
 
 #endif // !HUFFMAN_H
