@@ -1,2 +1,2 @@
-src/serial/./compressor
-src/serial/./decompressor
+out/objects/./serial_compressor
+out/objects/./serial_decompressor
