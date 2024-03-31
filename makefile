@@ -1,22 +1,19 @@
 # Objetivo predeterminado
-all: clean src/main run
+all: clean compile
 
 # Reglas para compilar archivos .c en archivos .o
-out/objects/huffman.o: src/huffman/huffman.c
-	gcc -c $< -o $@
-
-out/objects/freq.o: src/huffman/freq.c
-	gcc -c $< -o $@
-
-out/objects/file_utils.o: src/utilities/file_utils.c
-	gcc -c $< -o $@
-
-out/objects/main.o: src/main.c
-	gcc -c $< -o $@
-
-# Regla para enlazar los archivos .o y generar el ejecutable
-src/main: out/objects/huffman.o out/objects/freq.o out/objects/file_utils.o out/objects/main.o
-	gcc $^ -o $@
+compile:
+	#
+	gcc -c src/huffman/huffman.c -o out/objects/huffman 
+	gcc -c src/huffman/freq.c -o out/objects/freq
+	gcc -c src/utilities/file_utils.c -o out/objects/file_utils
+	#
+	gcc src/serial/compressor.c -o src/serial/compressor
+	gcc src/serial/decompressor.c -o src/serial/decompressor
+	#
+	gcc -c src/fork/file_locks.c -o out/objects/file_locks
+	gcc src/fork/compressor.c -o src/fork/compressor
+	gcc src/fork/decompressor.c -o src/fork/decompressor
 
 # Regla para limpiar los archivos generados
 clean:
@@ -24,6 +21,3 @@ clean:
 	rm -f out/bins/*
 	rm -f out/decodes/*
 	rm -f out/objects/*.o
-
-run:
-	src/./main
