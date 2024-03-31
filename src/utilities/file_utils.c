@@ -347,7 +347,6 @@ void decompress_and_write_to_file(FILE *source, const char *output_path) {
 
             // If we reach a leaf node (character node), write the character to the output file
             if (!(currentNode->left) && !(currentNode->right)) {
-                //fwprintf(output_file, L"%lc", currentNode->data);
                 fputwc(currentNode->data, output_file);
                 currentNode = huffmanRoot; // Reset to root for the next character
                 bytes_written++;

@@ -4,6 +4,8 @@
 #include <wchar.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <pthread.h>
+#include <time.h>
 
 #include "../utilities/file_utils.c"
 #include "file_locks.c"
@@ -23,18 +25,17 @@ int main() {
     struct EncodeArgs *paths = getAllPaths(booksFolder);
     
     // Decode 
+    int miliseconds = 200;
     for (int i = 0; i < numOfProcess; i++) {
         pid = fork();
+        usleep(miliseconds *1000); // Convierte milisegundos a microsegundos y espera
         
         // Código específico del proceso hijo
         if (pid == 0) {
-            set_lock(binary_source, F_RDLCK);
-
-            printf("[PID %d] DECODING : %s\n", i+1, paths->books[i]);
-            fork_decompress(binary_source, paths->decodes[i]);
             printf("\n");
-
-            unlock_file(binary_source);
+            printf("[PID %d] DECODING : %s\n", i+1, paths->books[i]);
+            decompress_and_write_to_file(binary_source, paths->decodes[i]);
+            printf("\n");
             return 0;
         }
     }

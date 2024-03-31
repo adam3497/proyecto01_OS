@@ -7,7 +7,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-
 #include "../utilities/utils.h"
 
 void set_lock(FILE *fp, int type) {
@@ -40,6 +39,36 @@ void unlock_file(FILE *fp) {
     }
 }
 
+
+// Function to read metadata (filename and size) from the binary file
+void fork_read_metadata(const char* filename, size_t* size, FILE* file) {
+    
+    // Read filename length and filename string
+    size_t filename_length;
+    fread(&filename_length, sizeof(size_t), 1, file);
+    
+    printf("- Filename lenght: %zu\n", filename_length);
+    
+    char* filename_buffer = (char*)malloc((filename_length + 1) * sizeof(char));
+
+    if (filename_buffer == NULL) {
+        perror("Error allocating memory for filename buffer");
+        printf("\n");
+        exit(EXIT_FAILURE);
+    }
+
+    fread(filename_buffer, sizeof(char), filename_length, file);
+    filename_buffer[filename_length] = '\0';
+    
+    strcpy((char *) filename, filename_buffer);
+    
+    free(filename_buffer);
+
+    // Read file size
+    fread(size, sizeof(size_t), 1, file);
+    
+}
+
 void fork_decompress(FILE *source, const char *output_path) {
     printf("- Decompressing binary file\n");
     
@@ -52,16 +81,13 @@ void fork_decompress(FILE *source, const char *output_path) {
     // Read metadata (filename and size) from the input file
     size_t file_size;
     char filename[256];
-    set_lock(source, F_RDLCK);
-    read_metadata(filename, &file_size, source);
+    fork_read_metadata(filename, &file_size, source);
+    
     printf("- File name: %s\n", filename);
     printf("- File size: %zu B\n", file_size);
-    unlock_file(source);
 
     // Deserialize Huffman Tree from the binary file
-    set_lock(source, F_RDLCK);
     struct MinHeapNode* huffmanRoot = deserialize_huffman_tree(source);
-    unlock_file(source);
 
     if (huffmanRoot == NULL) {
         perror("Error allocating memory for Huffman tree node");
@@ -82,7 +108,7 @@ void fork_decompress(FILE *source, const char *output_path) {
     }
     
 
-    set_lock(source, F_RDLCK);
+    // set_lock(source, F_RDLCK);
     // Read the encoded bits from the input file and decode them
     unsigned char buffer;
     size_t bytes_written = 0;
@@ -109,6 +135,6 @@ void fork_decompress(FILE *source, const char *output_path) {
     }
 
     // Assert end of usage 
-    unlock_file(source);
+    // unlock_file(source);
     fclose(output_file);
 }
