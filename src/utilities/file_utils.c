@@ -68,7 +68,6 @@ void get_wchars_from_file(const char *filename, wchar_t **buffer) {
 
     // Close the file
     fclose(file);
-    printf("- Data read from input file\n");
 }
 
 /**
@@ -208,8 +207,6 @@ void serialize_huffman_tree(struct MinHeapNode* root, FILE* file) {
  * 
 */
 void write_metadata(size_t offset, const char* filename, size_t size, FILE* file) {
-    printf("- Writing metadata to the binary file\n");
-    
     // Write offset, filename length, and filename string
     fwrite(&offset, sizeof(size_t), 1, file);
     size_t filename_length = strlen(filename);
@@ -218,8 +215,6 @@ void write_metadata(size_t offset, const char* filename, size_t size, FILE* file
 
     // Write file size
     fwrite(&size, sizeof(size_t), 1, file);
-
-    printf("- Metadata written to binary file\n");
 }
 
 const char* extract_filename(const char* filepath) {
@@ -240,14 +235,9 @@ void write_encoded_bits_to_file(wchar_t *buffer, size_t buffer_size, const char*
 
     // Write metadata (filename and size) to the output file;
     write_metadata(offset, filename, buffer_size, output_file);
-
-    printf("- Serializing Huffman tree\n");
     
     // Serialize Huffman tree and write it to the output file
     serialize_huffman_tree(huffmanRoot, output_file);
-    printf("- Huffman tree serialized\n");
-
-    printf("- Encoding file...\n");
 
     // Compress data using Huffman codes and write it to the output file
     
@@ -284,8 +274,6 @@ void write_encoded_bits_to_file(wchar_t *buffer, size_t buffer_size, const char*
     if (bit_count > 0) {
         fputc(buffer_byte, output_file);
     }
-
-    printf("- File encoded\n");
 }
 
 
