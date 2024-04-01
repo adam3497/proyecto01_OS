@@ -12,11 +12,15 @@ serial: huffman
 	gcc src/serial/compressor.c -o out/objects/serial_compressor
 	gcc src/serial/decompressor.c -o out/objects/serial_decompressor
 
-# Reglas para compilar programa fork
+# Regla para compilar programa fork
 fork: huffman
 	gcc -c src/fork/file_locks.c -o out/objects/file_locks
 	gcc src/fork/compressor.c -o out/objects/fork_compressor
 	gcc src/fork/decompressor.c -o out/objects/fork_decompressor
+
+# Regla para compilar programa con pthreads
+pthread: huffman
+	gcc src/pthreads/compressor.c -o out/objects/pthread_compressor
 
 # Regla para limpiar los archivos generados
 clean:
