@@ -70,7 +70,7 @@ void read_metadata(size_t* offset, const char* filename, size_t* size, FILE* fil
  * 
  * 
 */
-void decompress_and_write_to_file(FILE *source, const char *output_path);
+void decompress_and_write_to_file(FILE *source, const char *output_path, int pos);
 
 
 
