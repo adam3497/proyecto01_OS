@@ -1,5 +1,5 @@
 # Objetivo predeterminado
-all: clean huffman serial fork
+all: clean serial fork pthread
 
 # Regla para compilar huffman y file utils
 huffman:
@@ -8,19 +8,20 @@ huffman:
 	gcc -c src/utilities/file_utils.c -o out/objects/file_utils
 
 # Regla para compilar programa serial
-serial: huffman
+serial:
 	gcc src/serial/compressor.c -o out/objects/serial_compressor
 	gcc src/serial/decompressor.c -o out/objects/serial_decompressor
 
 # Regla para compilar programa fork
-fork: huffman
+fork:
 	gcc -c src/fork/file_locks.c -o out/objects/file_locks
 	gcc src/fork/compressor.c -o out/objects/fork_compressor
 	gcc src/fork/decompressor.c -o out/objects/fork_decompressor
 
 # Regla para compilar programa con pthreads
-pthread: huffman
+pthread:
 	gcc src/pthreads/compressor.c -o out/objects/pthread_compressor
+	gcc src/pthreads/decompressor.c -o out/objects/pthread_decompressor
 
 # Regla para limpiar los archivos generados
 clean:
