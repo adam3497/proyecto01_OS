@@ -17,17 +17,11 @@
  * of each non-space/non-line-break character in the freq_table array.
  */
 void char_frequencies(wchar_t *buffer, int freq_table[]) {
-    printf("- Extracting frequencies from buffer\n");
     // Iterate through the wchar_t buffer
     wchar_t *ptr = buffer;
     while (*ptr != L'\0') {
         // Increment the frequency of the character
-            freq_table[*ptr]++;
-       /*  // Ignore spaces and line breaks
-        if (*ptr != L' ' && *ptr != L'\n' && *ptr != L'\r') {
-            freq_table[*ptr]++;
-        } */
+        freq_table[*ptr]++;
         ptr++; // Increment the pointer to move to the next character
     }
-    printf("- Frequencies extracted from buffer\n");
 }
