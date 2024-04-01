@@ -9,10 +9,9 @@
 
 int main() {
     // Folder Paths
-    const char* booksFolder = "books";
-    const char* out = "out/bin/books_compressed_serial.bin";
+    const char* input_file = "out/bin/books_compressed_serial.bin";
     
-    FILE *binary_source = fopen(out, "rb");
+    FILE *binary_source = fopen(input_file, "rb");
     if (binary_source == NULL) {
         perror("Error opening binary file for decompression");
         exit(EXIT_FAILURE);
@@ -27,21 +26,14 @@ int main() {
     const char* dir_result = create_output_dir(dirMetadata.directory);
     const char* dir_path = concat_strings(dir_result, "/");
 
-    // Set for every book in books folder
-    struct EncodeArgs *paths = getAllPaths(booksFolder);
-    
-    // Number of books to compress
-    int runs = TOTAL_BOOKS;
-
     // Decode 
-    for (int i = 0; i < runs; i++) {
-        printf("[%d] DECODING : %s\n", i+1, paths->books[i]);
+    for (int i = 0; i < dirMetadata.numTxtFiles; i++) {
+        printf("Decompressing file [%d]: ", i+1);
         decompress_and_write_to_file(binary_source, dir_path);
         printf("\n");
     }
 
     // Liberar la memoria asignada
     fclose(binary_source);
-    free(paths);
     return EXIT_SUCCESS;
 }
