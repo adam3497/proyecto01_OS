@@ -19,7 +19,7 @@ int main() {
 
     // Folder Paths
     const char* booksFolder = "books";
-    const char* out = "out/bin/compressed.bin";
+    const char* out = "out/bin/books_compressed_fork.bin";
     
     FILE *binary_source = fopen(out, "rb");
 
@@ -43,7 +43,7 @@ int main() {
         if (pid == 0) {
             printf("\n");
             printf("[PID %d] DECODING : %s\n", i+1, paths->books[i]);
-            decompress_and_write_to_file(binary_source, paths->decodes[i]);
+            decompress_and_write_to_file(binary_source, paths->decodes[i], i+1);
             printf("\n");
             return 0;
         } else if (pid > 0) {

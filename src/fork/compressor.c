@@ -52,7 +52,7 @@ int main() {
 
     // Folder Paths
     const char* booksFolder = "books";
-    const char* out = "out/bin/compressed.bin";
+    const char* out = "out/bin/books_compressed_fork.bin";
 
     int runs = TOTAL_BOOKS;
 
