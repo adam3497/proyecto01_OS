@@ -6,6 +6,7 @@
 
 #define TOTAL_BOOKS 98 
 #define MAX_BOOK_NAME_LENGTH 256 
+#define MAX_TOTAL_BOOKS 100
 
 #define MAX_PATH_LENGTH 256
 
@@ -54,7 +55,7 @@ void encode_file(wchar_t *buffer, const char* filename, struct HuffmanCode* huff
 /**
  * 
 */
-void write_encoded_bits_to_file(wchar_t *buffer, size_t buffer_size, const char* filename, struct MinHeapNode* huffmanRoot, struct HuffmanCode* huffmanCodes[], FILE *output_file);
+void write_encoded_bits_to_file(wchar_t *buffer, size_t buffer_size, const char* filename, struct MinHeapNode* huffmanRoot, struct HuffmanCode* huffmanCodes[], FILE *output_file, size_t* offsetsPtr, int pos);
 
 /**
  * 
@@ -87,11 +88,13 @@ struct EncodeArgs* getAllPaths(const char* booksFolder);
 struct DirectoryMetadata {
     const char* directory;
     int numTxtFiles;
+    size_t offsets[MAX_TOTAL_BOOKS];
 };
+
 /**
  * 
 */
-void write_directory_metadata(FILE *binary_file, const struct DirectoryMetadata* metadata);
+long write_directory_metadata(FILE *binary_file, const struct DirectoryMetadata* metadata);
 
 /**
  * 

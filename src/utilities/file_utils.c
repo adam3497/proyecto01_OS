@@ -171,7 +171,7 @@ void encode_file(wchar_t *buffer, const char* filename, struct HuffmanCode* huff
  * 
 */
 // Function to write directory metadata to the binary file
-void write_directory_metadata(FILE *binary_file, const struct DirectoryMetadata* metadata) {
+long write_directory_metadata(FILE *binary_file, const struct DirectoryMetadata* metadata) {
     // Write directory name length
     size_t dirname_length = strlen(metadata->directory);
     fwrite(&dirname_length, sizeof(size_t), 1, binary_file);
@@ -181,6 +181,15 @@ void write_directory_metadata(FILE *binary_file, const struct DirectoryMetadata*
     
     // Write number of text files
     fwrite(&(metadata->numTxtFiles), sizeof(int), 1, binary_file);
+
+    // Get the current position in the file
+    long position_before_offsets = ftell(binary_file);
+
+    // Write offsets array
+    fwrite(metadata->offsets, sizeof(size_t), metadata->numTxtFiles, binary_file);
+
+    // Return the position before writing the offsets array
+    return position_before_offsets;
 }
 
 /**
@@ -226,12 +235,13 @@ const char* extract_filename(const char* filepath) {
     return filename;
 }
 
-void write_encoded_bits_to_file(wchar_t *buffer, size_t buffer_size, const char* filepath, struct MinHeapNode* huffmanRoot, struct HuffmanCode* huffmanCodes[], FILE *output_file) {
+void write_encoded_bits_to_file(wchar_t *buffer, size_t buffer_size, const char* filepath, struct MinHeapNode* huffmanRoot, struct HuffmanCode* huffmanCodes[], FILE *output_file, size_t* offsetsPtr, int pos) {
     // Extract the name for the current file
     const char* filename = extract_filename(filepath);
     
     // Get current position in output file (offset)
     size_t offset = ftell(output_file);
+    offsetsPtr[pos-1] = offset;
 
     // Write metadata (filename and size) to the output file;
     write_metadata(offset, filename, buffer_size, output_file);
@@ -310,6 +320,13 @@ void read_directory_metadata(struct DirectoryMetadata* metadata, FILE* binary_fi
     // Read number of text files
     if (fread(&(metadata->numTxtFiles), sizeof(int), 1, binary_file) != 1) {
         perror("Error reading number of text files");
+        exit(EXIT_FAILURE);
+    }
+
+    // Read offsets array
+    size_t numOffsets = metadata->numTxtFiles;
+    if (fread(metadata->offsets, sizeof(size_t), numOffsets, binary_file) != numOffsets) {
+        perror("Error reading offsets array from file");
         exit(EXIT_FAILURE);
     }
 }
