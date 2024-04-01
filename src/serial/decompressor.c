@@ -29,7 +29,7 @@ int main() {
     // Decode 
     for (int i = 0; i < dirMetadata.numTxtFiles; i++) {
         printf("Decompressing file [%d]: ", i+1);
-        decompress_and_write_to_file(binary_source, dir_path);
+        decompress_and_write_to_file(binary_source, dir_path, i+1);
         printf("\n");
     }
 
