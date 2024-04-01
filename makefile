@@ -8,12 +8,12 @@ huffman:
 	gcc -c src/utilities/file_utils.c -o out/objects/file_utils
 
 # Regla para compilar programa serial
-serial:
+serial: huffman
 	gcc src/serial/compressor.c -o out/objects/serial_compressor
 	gcc src/serial/decompressor.c -o out/objects/serial_decompressor
 
 # Reglas para compilar programa fork
-fork:
+fork: huffman
 	gcc -c src/fork/file_locks.c -o out/objects/file_locks
 	gcc src/fork/compressor.c -o out/objects/fork_compressor
 	gcc src/fork/decompressor.c -o out/objects/fork_decompressor
