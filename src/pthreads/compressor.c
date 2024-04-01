@@ -18,10 +18,11 @@ pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 struct ThreadArgs {
     char* bookFile;
     FILE *outputFile;
+    int pos;
 };
 
 
-void encode(char *input_file, FILE *binary_output){
+void encode(char *input_file, FILE *binary_output, int pos){
     // Fill the buffer
     wchar_t *buffer = NULL;
     get_wchars_from_file(input_file, &buffer);
@@ -48,13 +49,11 @@ void encode(char *input_file, FILE *binary_output){
     // Write the Huffman Codes to file    
     size_t buffer_size = wcslen(buffer);
 
+    printf("[ENCODING %d]: %s\n", pos, input_file);
+
     // Lock the mutex before accessing the output file
     pthread_mutex_lock(&mutex);
-
-    printf("[ENCODING]: %s\n", input_file);
     write_encoded_bits_to_file(buffer, buffer_size, input_file, huffmanRoot, huffmanCodesArray, binary_output);
-    printf("  File encoded successfully\n");
-
     // Unlock the mutex after accessing the output file
     pthread_mutex_unlock(&mutex);
 
@@ -68,7 +67,7 @@ void* encode_book(void* arg) {
     struct ThreadArgs* args = (struct ThreadArgs*)arg;
     
     // Perform encoding
-    encode(args->bookFile, args->outputFile);
+    encode(args->bookFile, args->outputFile, args->pos);
 
     // Release the semaphore to allow another thread to start
     sem_post(&sem);
@@ -83,7 +82,7 @@ int main() {
 
     // Folder Paths
     const char* booksFolder = "books";
-    const char* out = "out/bin/books_compressed_serial.bin";
+    const char* out = "out/bin/books_compressed_pthread.bin";
 
     FILE *binary_output = fopen(out, "wb");
     if (binary_output == NULL) {
@@ -104,20 +103,21 @@ int main() {
 
     // Create an array of pthreads
     pthread_t threads[paths->fileCount];
+    struct ThreadArgs thread_args[paths->fileCount]; // Array to hold thread arguments
+
 
     // Encode books using pthreads
-    for (int i = 0; i < paths->fileCount; i++) {
+    for (int i = 0; i < paths->fileCount; ++i) {
         // Wait until a slot is available in the semaphore
         sem_wait(&sem);
 
-        // Create arguments for the thread
-        struct ThreadArgs args = {
-            .bookFile = paths->books[i],            
-            .outputFile = binary_output
-        };
+        // Populate thread arguments
+        thread_args[i].bookFile = paths->books[i];
+        thread_args[i].outputFile = binary_output;
+        thread_args[i].pos = i+1;
         
         // Create a thread to encode the book
-        pthread_create(&threads[i], NULL, encode_book, (void*)&args);
+        pthread_create(&threads[i], NULL, encode_book, (void*)&thread_args[i]);
     }
 
     // Wait for all threads to finish
