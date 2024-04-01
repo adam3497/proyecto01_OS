@@ -48,7 +48,7 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    // Read directory metadata
+    // Read directory metadata, it also reads the offsets for decompression
     struct DirectoryMetadata dirMetadata;
     read_directory_metadata(&dirMetadata, binary_source);
 

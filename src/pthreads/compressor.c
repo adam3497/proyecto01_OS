@@ -19,10 +19,11 @@ struct ThreadArgs {
     char* bookFile;
     FILE *outputFile;
     int pos;
+    size_t* offsetsPtr; // Pointer to the offsets array
 };
 
 
-void encode(char *input_file, FILE *binary_output, int pos){
+void encode(char *input_file, FILE *binary_output, int pos, size_t* offsetsPtr){
     // Fill the buffer
     wchar_t *buffer = NULL;
     get_wchars_from_file(input_file, &buffer);
@@ -53,7 +54,7 @@ void encode(char *input_file, FILE *binary_output, int pos){
 
     // Lock the mutex before accessing the output file
     pthread_mutex_lock(&mutex);
-    write_encoded_bits_to_file(buffer, buffer_size, input_file, huffmanRoot, huffmanCodesArray, binary_output);
+    write_encoded_bits_to_file(buffer, buffer_size, input_file, huffmanRoot, huffmanCodesArray, binary_output, offsetsPtr, pos);
     // Unlock the mutex after accessing the output file
     pthread_mutex_unlock(&mutex);
 
@@ -66,8 +67,8 @@ void encode(char *input_file, FILE *binary_output, int pos){
 void* encode_book(void* arg) {
     struct ThreadArgs* args = (struct ThreadArgs*)arg;
     
-    // Perform encoding
-    encode(args->bookFile, args->outputFile, args->pos);
+    // Perform encoding and register the offset for that file
+    encode(args->bookFile, args->outputFile, args->pos, args->offsetsPtr);
 
     // Release the semaphore to allow another thread to start
     sem_post(&sem);
@@ -95,16 +96,19 @@ int main() {
 
     struct DirectoryMetadata dirMetadata = {
         .directory = booksFolder,
-        .numTxtFiles = paths->fileCount
+        .numTxtFiles = paths->fileCount,
+        .offsets = {0}
     };
 
-    // Write content metadata to binary file
-    write_directory_metadata(binary_output, &dirMetadata);
+    // Write content metadata to binary file and get the position for the offsets array
+    long offsets_pos = write_directory_metadata(binary_output, &dirMetadata);
 
     // Create an array of pthreads
     pthread_t threads[paths->fileCount];
     struct ThreadArgs thread_args[paths->fileCount]; // Array to hold thread arguments
 
+    // Offsets array to be populated
+    size_t offsets[MAX_TOTAL_BOOKS] = {0};
 
     // Encode books using pthreads
     for (int i = 0; i < paths->fileCount; ++i) {
@@ -115,6 +119,7 @@ int main() {
         thread_args[i].bookFile = paths->books[i];
         thread_args[i].outputFile = binary_output;
         thread_args[i].pos = i+1;
+        thread_args[i].offsetsPtr = offsets; // Pass the offsets array pointer
         
         // Create a thread to encode the book
         pthread_create(&threads[i], NULL, encode_book, (void*)&thread_args[i]);
@@ -124,6 +129,10 @@ int main() {
     for (int i = 0; i < paths->fileCount; i++) {
         pthread_join(threads[i], NULL);
     }
+
+    // Update the offsets array in the binary file
+    fseek(binary_output, offsets_pos, SEEK_SET);
+    fwrite(offsets, sizeof(size_t), paths->fileCount, binary_output);
 
     fclose(binary_output);
     free(paths);
