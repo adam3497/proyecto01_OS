@@ -454,8 +454,6 @@ void read_metadata(size_t* offset, const char* filename, size_t* size, FILE* fil
  * @param output_path: name of the output directory where the files are gonna be stored
 */
 void decompress_and_write_to_file(FILE *source, const char *output_path) {
-    printf("- Decompressing binary file\n");
-    
     // Open binary file 
     if (source == NULL) {
         perror("Error opening binary file");
@@ -466,7 +464,7 @@ void decompress_and_write_to_file(FILE *source, const char *output_path) {
     char filename[256];
     size_t offset;
     read_metadata(&offset, filename, &file_size, source);
-    printf("- File name: %s\n", filename);
+    printf("Current file: %s\n", filename);
     printf("- File offset: %zi\n", offset);
     printf("- File size: %zu B\n", file_size);
 
