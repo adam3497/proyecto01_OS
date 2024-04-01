@@ -8,7 +8,7 @@
 #include "../huffman/freq.c"
 
 
-void encode(char *input_file, char *freq_file, FILE *binary_output){
+void encode(char *input_file, char *freq_file, FILE *binary_output, int pos, size_t* offsets){
 
     // Fill the buffer
     wchar_t *buffer = NULL;
@@ -38,7 +38,7 @@ void encode(char *input_file, char *freq_file, FILE *binary_output){
 
     // Write the Huffman Codes to file    
     size_t buffer_size = wcslen(buffer);
-    write_encoded_bits_to_file(buffer, buffer_size, input_file, huffmanRoot, huffmanCodesArray, binary_output);
+    write_encoded_bits_to_file(buffer, buffer_size, input_file, huffmanRoot, huffmanCodesArray, binary_output, offsets, pos);
 }
 
 int main() {
@@ -57,16 +57,21 @@ int main() {
 
     struct DirectoryMetadata dirMetadata = {
         .directory = booksFolder,
-        .numTxtFiles = paths->fileCount
+        .numTxtFiles = paths->fileCount,
+        .offsets = {0}
     };
 
-    // Write content metadata to binary file
-    write_directory_metadata(binary_output, &dirMetadata);
+    // Write content metadata to binary file and get the position for the offsets array
+    long offsets_pos = write_directory_metadata(binary_output, &dirMetadata);
+
+    // Offsets array to be populated
+    size_t offsets[MAX_TOTAL_BOOKS] = {0};
+
 
     // Encode
     for (int i = 0; i < paths->fileCount; i++) {
         printf("[%d] CODING : %s\n", i+1, paths->books[i]);
-        encode(paths->books[i], paths->freqs[i], binary_output);
+        encode(paths->books[i], paths->freqs[i], binary_output, i+1, offsets);
         printf("\n");
     }
 
