@@ -46,8 +46,6 @@ int main() {
     const char* booksFolder = "books";
     const char* out = "out/bin/books_compressed_serial.bin";
 
-    int runs = TOTAL_BOOKS;
-
     FILE *binary_output = fopen(out, "wb");
     if (binary_output == NULL) {
         perror("Error opening output binary file");
@@ -57,9 +55,16 @@ int main() {
     // Set for every book in books folder
     struct EncodeArgs *paths = getAllPaths(booksFolder);
 
+    struct DirectoryMetadata dirMetadata = {
+        .directory = booksFolder,
+        .numTxtFiles = paths->fileCount
+    };
+
+    // Write content metadata to binary file
+    write_directory_metadata(binary_output, &dirMetadata);
 
     // Encode
-    for (int i = 0; i < runs; i++) {
+    for (int i = 0; i < paths->fileCount; i++) {
         printf("[%d] CODING : %s\n", i+1, paths->books[i]);
         encode(paths->books[i], paths->freqs[i], binary_output);
         printf("\n");

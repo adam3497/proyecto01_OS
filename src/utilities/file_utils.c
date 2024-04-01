@@ -4,6 +4,9 @@
 #include <wchar.h>
 #include <string.h>
 #include <dirent.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <errno.h>
 
 #include "utils.h"
 
@@ -165,6 +168,25 @@ void encode_file(wchar_t *buffer, const char* filename, struct HuffmanCode* huff
 
 }
 
+/**
+ * 
+*/
+// Function to write directory metadata to the binary file
+void write_directory_metadata(FILE *binary_file, const struct DirectoryMetadata* metadata) {
+    // Write directory name length
+    size_t dirname_length = strlen(metadata->directory);
+    fwrite(&dirname_length, sizeof(size_t), 1, binary_file);
+    
+    // Write directory name
+    fwrite(metadata->directory, sizeof(char), dirname_length, binary_file);
+    
+    // Write number of text files
+    fwrite(&(metadata->numTxtFiles), sizeof(int), 1, binary_file);
+}
+
+/**
+ * 
+*/
 void serialize_huffman_tree(struct MinHeapNode* root, FILE* file) {
     // Write a marker for NULL node
     if (root == NULL) {
@@ -182,16 +204,21 @@ void serialize_huffman_tree(struct MinHeapNode* root, FILE* file) {
     serialize_huffman_tree(root->right, file);
 }
 
-void write_metadata(const char* filename, size_t size, FILE* file) {
+/**
+ * 
+*/
+void write_metadata(size_t offset, const char* filename, size_t size, FILE* file) {
     printf("- Writing metadata to the binary file\n");
     
-    // Write filename length and filename string
+    // Write offset, filename length, and filename string
+    fwrite(&offset, sizeof(size_t), 1, file);
     size_t filename_length = strlen(filename);
     fwrite(&filename_length, sizeof(size_t), 1, file);
     fwrite(filename, sizeof(char), filename_length, file);
 
     // Write file size
     fwrite(&size, sizeof(size_t), 1, file);
+
     printf("- Metadata written to binary file\n");
 }
 
@@ -208,8 +235,11 @@ void write_encoded_bits_to_file(wchar_t *buffer, size_t buffer_size, const char*
     // Extract the name for the current file
     const char* filename = extract_filename(filepath);
     
+    // Get current position in output file (offset)
+    size_t offset = ftell(output_file);
+
     // Write metadata (filename and size) to the output file;
-    write_metadata(filename, buffer_size, output_file);
+    write_metadata(offset, filename, buffer_size, output_file);
 
     printf("- Serializing Huffman tree\n");
     
@@ -261,6 +291,96 @@ void write_encoded_bits_to_file(wchar_t *buffer, size_t buffer_size, const char*
 
 // DECODE
 
+/**
+ * 
+*/
+void read_directory_metadata(struct DirectoryMetadata* metadata, FILE* binary_file) {
+    // Read directory name length
+    size_t dirname_length;
+    if (fread(&dirname_length, sizeof(size_t), 1, binary_file) != 1) {
+        perror("Error reading directory name length");
+        exit(EXIT_FAILURE);
+    }
+    
+    // Allocate memory for directory name buffer
+    char* dirname_buffer = (char*)malloc((dirname_length + 1) * sizeof(char));
+    if (dirname_buffer == NULL) {
+        perror("Error allocating memory for directory name buffer");
+        exit(EXIT_FAILURE);
+    }
+
+    // Read directory name from file
+    if (fread(dirname_buffer, sizeof(char), dirname_length, binary_file) != dirname_length) {
+        perror("Error reading directory name from file");
+        exit(EXIT_FAILURE);
+    }
+    dirname_buffer[dirname_length] = '\0';
+
+    // Assign directory name to metadata
+    metadata->directory = dirname_buffer;
+    
+    // Read number of text files
+    if (fread(&(metadata->numTxtFiles), sizeof(int), 1, binary_file) != 1) {
+        perror("Error reading number of text files");
+        exit(EXIT_FAILURE);
+    }
+}
+
+/**
+ * 
+*/
+const char* create_output_dir(const char* dirname) {
+    const char* out_path = "out/";
+    const char* dir_path = concat_strings(out_path, dirname);
+    // Check if folder already exists
+    struct stat st;
+    if (stat(dir_path, &st) == -1) {
+        // Folder doesn't exist, create it
+        if (mkdir(dir_path, 0777) == -1) { 
+            if (errno == EEXIST) {
+            printf("Folder '%s' already exists.\n", dir_path);
+            } else {
+                perror("Error creating folder");
+                exit(EXIT_FAILURE);
+            }
+        } else {
+            printf("Folder '%s' created successfully.\n", dir_path);
+        }
+        
+    } else {
+        printf("Folder '%s' already exists.\n", dir_path);
+    }
+    return dir_path;
+}
+
+/**
+ * 
+*/
+const char* concat_strings(const char* str1, const char* str2) {
+    // Calculate the total length of the concatenated string
+    size_t len1 = strlen(str1);
+    size_t len2 = strlen(str2);
+    size_t total_len = len1 + len2 + 1; // Add 1 for null terminator
+
+    // Allocate memory for the concatenated string
+    char* result = (char*)malloc(total_len);
+    if (result == NULL) {
+        perror("Error allocating memory for the new string");
+        exit(EXIT_FAILURE);
+    }
+
+    // Copy the first string into the result buffer
+    strcpy(result, str1);
+
+    // Concatenate the second string to the end of the first string
+    strcat(result, str2);
+
+    return result;
+}
+
+/**
+ * 
+*/
 struct MinHeapNode* deserialize_huffman_tree(FILE* file) {
     int marker = fgetc(file);
 
@@ -285,7 +405,12 @@ struct MinHeapNode* deserialize_huffman_tree(FILE* file) {
 }
 
 // Function to read metadata (filename and size) from the binary file
-void read_metadata(const char* filename, size_t* size, FILE* file) {
+void read_metadata(size_t* offset, const char* filename, size_t* size, FILE* file) {
+    // Read offset
+    if (fread(offset, sizeof(size_t), 1, file) != 1) {
+        perror("- Error reading offset");
+        exit(EXIT_FAILURE);
+    }
     
     // Read filename length
     size_t filename_length;
@@ -324,6 +449,10 @@ void read_metadata(const char* filename, size_t* size, FILE* file) {
     free(filename_buffer);
 }
 
+/**
+ * @param source: binary file to be decompressed
+ * @param output_path: name of the output directory where the files are gonna be stored
+*/
 void decompress_and_write_to_file(FILE *source, const char *output_path) {
     printf("- Decompressing binary file\n");
     
@@ -335,8 +464,10 @@ void decompress_and_write_to_file(FILE *source, const char *output_path) {
     // Read metadata (filename and size) from the input file
     size_t file_size;
     char filename[256];
-    read_metadata(filename, &file_size, source);
+    size_t offset;
+    read_metadata(&offset, filename, &file_size, source);
     printf("- File name: %s\n", filename);
+    printf("- File offset: %zi\n", offset);
     printf("- File size: %zu B\n", file_size);
 
     // Deserialize Huffman Tree from the binary file
@@ -350,8 +481,12 @@ void decompress_and_write_to_file(FILE *source, const char *output_path) {
     // Set the locale to handle wide characters properly
     setlocale(LC_ALL, "");
     
+    // Concatenate output_path with filename to create the full file path
+    char file_path[256];
+    snprintf(file_path, sizeof(file_path), "%s/%s", output_path, filename);
+
     // Open output file
-    FILE *output_file = fopen(output_path, "w, ccs=UTF-8");
+    FILE *output_file = fopen(file_path, "w+, ccs=UTF-8");
 
     if (output_file == NULL) {
         perror("Error opening output file");
@@ -408,7 +543,7 @@ struct EncodeArgs* getAllPaths(const char* booksFolder){
         perror("Error al abrir el directorio");
     }
 
-    while ((entrada = readdir(dir)) != NULL && fileCounter < TOTAL_BOOKS) {
+    while ((entrada = readdir(dir)) != NULL) {
         if (strstr(entrada->d_name, ".txt") != NULL) {
             // Book paths
             char bookPath[MAX_BOOK_NAME_LENGTH];
@@ -433,6 +568,8 @@ struct EncodeArgs* getAllPaths(const char* booksFolder){
             fileCounter++;
         }
     }
+    // Save the amount of files within the directory
+    args->fileCount = fileCounter;
     closedir(dir);
     return args;
 }

@@ -7,6 +7,8 @@
 #define TOTAL_BOOKS 98 
 #define MAX_BOOK_NAME_LENGTH 256 
 
+#define MAX_PATH_LENGTH 256
+
 #include "../huffman/huffman.h"
 
 
@@ -62,7 +64,7 @@ struct MinHeapNode* deserialize_huffman_tree(FILE* file);
 /**
  * 
 */
-void read_metadata(const char* filename, size_t* size, FILE* file);
+void read_metadata(size_t* offset, const char* filename, size_t* size, FILE* file);
 
 /**
  * 
@@ -76,8 +78,34 @@ struct EncodeArgs {
     char books[TOTAL_BOOKS][MAX_BOOK_NAME_LENGTH];
     char freqs[TOTAL_BOOKS][MAX_BOOK_NAME_LENGTH];
     char decodes[TOTAL_BOOKS][MAX_BOOK_NAME_LENGTH];
+    int fileCount;
 };
 
 struct EncodeArgs* getAllPaths(const char* booksFolder);
+
+// Struct to hold directory metadata
+struct DirectoryMetadata {
+    const char* directory;
+    int numTxtFiles;
+};
+/**
+ * 
+*/
+void write_directory_metadata(FILE *binary_file, const struct DirectoryMetadata* metadata);
+
+/**
+ * 
+*/
+void read_directory_metadata(struct DirectoryMetadata* metadata, FILE* binary_file);
+
+/**
+ * 
+*/
+const char* create_output_dir(const char* dirname);
+
+/**
+ * 
+*/
+const char* concat_strings(const char* str1, const char* str2);
 
 #endif // !UTILS_H

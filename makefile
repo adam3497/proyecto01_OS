@@ -21,3 +21,4 @@ clean:
 	rm -f out/bin/*
 	rm -f out/decodes/*
 	rm -f out/objects/*
+	rm -r out/books
