@@ -6,6 +6,9 @@
 #include <sys/wait.h>
 #include <pthread.h>
 #include <time.h>
+#include <sys/wait.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 
 #include "../utilities/file_utils.c"
 #include "../huffman/huffman.c"
@@ -26,8 +29,15 @@ int main() {
     // Set for every book in books folder
     struct EncodeArgs *paths = getAllPaths(booksFolder);
     
+    // Read directory metadata, it also reads the offsets for decompression
+    struct DirectoryMetadata dirMetadata;
+    read_directory_metadata(&dirMetadata, binary_source);
+
+    // Create folder to store decompressed files
+    const char* dir_result = create_output_dir(dirMetadata.directory);
+    const char* dir_path = concat_strings(dir_result, "/");
+
     // Decode 
-    int miliseconds = 200;
     int activeProcesses = 0; // Track the number of active processes
     for (int i = 0; i < numOfProcess; i++) {
         // Wait until there are available process slots
@@ -37,13 +47,12 @@ int main() {
         }
 
         pid = fork();
-        usleep(miliseconds *1000); // Convierte milisegundos a microsegundos y espera
         
         // Código específico del proceso hijo
         if (pid == 0) {
             printf("\n");
             printf("[PID %d] DECODING : %s\n", i+1, paths->books[i]);
-            decompress_and_write_to_file(binary_source, paths->decodes[i], i+1);
+            decompress_and_write_to_file(binary_source, dir_path, i+1);
             printf("\n");
             return 0;
         } else if (pid > 0) {
@@ -59,12 +68,6 @@ int main() {
         wait(NULL);
         activeProcesses--;
     }
-
-    /* // El padre espera a todos los hijos
-    while (numOfProcess > 0) {
-        wait(NULL);
-        numOfProcess--;
-    } */
 
     // Liberar la memoria asignada
     fclose(binary_source);
