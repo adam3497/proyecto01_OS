@@ -83,7 +83,7 @@ int main() {
 
     // Folder Paths
     const char* booksFolder = "books";
-    const char* out = "out/bin/books_compressed_pthread.bin";
+    const char* out = "out/bin/compressed.bin";
 
     FILE *binary_output = fopen(out, "wb");
     if (binary_output == NULL) {

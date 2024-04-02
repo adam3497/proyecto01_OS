@@ -79,7 +79,7 @@ int main() {
 
     // Folder Paths
     const char* booksFolder = "books";
-    const char* out = "out/bin/books_compressed_fork.bin";
+    const char* out = "out/bin/compressed.bin";
 
     int runs = TOTAL_BOOKS;
 
@@ -111,10 +111,9 @@ int main() {
             set_lock(binary_output, F_WRLCK);
 
             // Escribir
-            printf("[PID %d] CODING : %s\n", i+1, paths->books[i]);
+            printf("[PID %d][CODING #%d] %s\n", getpid(), i+1, paths->books[i]);
             encode(paths->books[i], paths->freqs[i], binary_output, offsets, i+1);
-            printf("\n");
-
+    
             // Liberar el archivo y evitar que los hijos creen más procesos
             unlock_file(binary_output);
             return 0;
