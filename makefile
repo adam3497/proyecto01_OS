@@ -27,5 +27,6 @@ pthread:
 clean:
 	rm -f out/frequencies/*
 	rm -f out/bin/*
+	rm -f out/books/*
 	rm -f out/decodes/*
 	rm -f out/objects/*
