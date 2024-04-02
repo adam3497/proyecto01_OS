@@ -50,7 +50,7 @@ void encode(char *input_file, FILE *binary_output, int pos, size_t* offsetsPtr){
     // Write the Huffman Codes to file    
     size_t buffer_size = wcslen(buffer);
 
-    printf("[ENCODING %d]: %s\n", pos, input_file);
+    printf("[PID %d][CODING #%d] %s\n", getpid(), pos, input_file);
 
     // Lock the mutex before accessing the output file
     pthread_mutex_lock(&mutex);

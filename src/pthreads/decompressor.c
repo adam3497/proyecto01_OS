@@ -34,7 +34,7 @@ void* decode_book(void* arg) {
     pthread_mutex_unlock(&mutex);
 
     // Release the semaphore to allow another thread to start
-    sem_post(&sem);
+    // sem_post(&sem);
 
     return NULL;
 }
@@ -60,7 +60,7 @@ int main() {
     const char* dir_path = concat_strings(dir_result, "/");
 
     // Initialize the semaphore with an initial value of 8
-    sem_init(&sem, 0, TOTAL_BOOKS);
+    // sem_init(&sem, 0, 8);
 
     // Create an array of pthreads
     pthread_t threads[dirMetadata.numTxtFiles];
@@ -69,7 +69,7 @@ int main() {
     // Decompress files using pthreads
     for (int i = 0; i < dirMetadata.numTxtFiles; ++i) {
         // Wait until a slot is available in the semaphore
-        sem_wait(&sem);
+        // sem_wait(&sem);
         
         //printf("Decompressing file [%d]: ", i+1);
 
