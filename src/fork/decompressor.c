@@ -40,7 +40,8 @@ int main() {
 
     // Track the number of active processes
     int activeProcesses = 0; 
-    int miliseconds = 2;
+    int miliseconds = 150;
+    
     // Decode 
     for (int i = 0; i < numOfProcess; i++) {
         // Wait until there are available process slots
@@ -50,7 +51,7 @@ int main() {
         }
 
         pid = fork();
-        usleep(miliseconds * 100);
+        usleep(miliseconds * 1000);
 
         // Código específico del proceso hijo
         if (pid == 0) {
