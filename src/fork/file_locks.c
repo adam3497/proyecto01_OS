@@ -9,37 +9,6 @@
 
 #include "../utilities/utils.h"
 
-void set_lock(FILE *fp, int type) {
-    int fd = fileno(fp); // Obtener el descriptor de archivo
-    struct flock lock;
-    memset(&lock, 0, sizeof(lock));
-    lock.l_type = type; // F_RDLCK para bloqueo de lectura, F_WRLCK para bloqueo de escritura
-    lock.l_whence = SEEK_SET;
-    lock.l_start = 0; // Inicio del archivo
-    lock.l_len = 0; // 0 significa hasta el final del archivo
-
-    if (fcntl(fd, F_SETLKW, &lock) == -1) {
-        perror("Error al intentar establecer el bloqueo");
-        exit(1);
-    }
-}
-
-void unlock_file(FILE *fp) {
-    int fd = fileno(fp); // Obtener el descriptor de archivo
-    struct flock lock;
-    memset(&lock, 0, sizeof(lock));
-    lock.l_type = F_UNLCK; // Desbloquear
-    lock.l_whence = SEEK_SET;
-    lock.l_start = 0;
-    lock.l_len = 0;
-
-    if (fcntl(fd, F_SETLK, &lock) == -1) {
-        perror("Error al intentar desbloquear el archivo");
-        exit(1);
-    }
-}
-
-
 // Function to read metadata (filename and size) from the binary file
 void fork_read_metadata(const char* filename, size_t* size, FILE* file) {
     

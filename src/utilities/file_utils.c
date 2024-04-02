@@ -6,6 +6,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <fcntl.h>
 #include <errno.h>
 
 #include "utils.h"
@@ -172,6 +173,7 @@ void encode_file(wchar_t *buffer, const char* filename, struct HuffmanCode* huff
 */
 // Function to write directory metadata to the binary file
 long write_directory_metadata(FILE *binary_file, const struct DirectoryMetadata* metadata) {
+    
     // Write directory name length
     size_t dirname_length = strlen(metadata->directory);
     fwrite(&dirname_length, sizeof(size_t), 1, binary_file);
@@ -234,6 +236,102 @@ const char* extract_filename(const char* filepath) {
     }
     return filename;
 }
+
+void set_lock(FILE *fp, int type) {
+    int fd = fileno(fp); // Obtener el descriptor de archivo
+    struct flock lock;
+    memset(&lock, 0, sizeof(lock));
+    lock.l_type = type; // F_RDLCK para bloqueo de lectura, F_WRLCK para bloqueo de escritura
+    lock.l_whence = SEEK_SET;
+    lock.l_start = 0; // Inicio del archivo
+    lock.l_len = 0; // 0 significa hasta el final del archivo
+
+    if (fcntl(fd, F_SETLKW, &lock) == -1) {
+        perror("Error al intentar establecer el bloqueo");
+        exit(1);
+    }
+}
+
+void unlock_file(FILE *fp) {
+    int fd = fileno(fp); // Obtener el descriptor de archivo
+    struct flock lock;
+    memset(&lock, 0, sizeof(lock));
+    lock.l_type = F_UNLCK; // Desbloquear
+    lock.l_whence = SEEK_SET;
+    lock.l_start = 0;
+    lock.l_len = 0;
+
+    if (fcntl(fd, F_SETLK, &lock) == -1) {
+        perror("Error al intentar desbloquear el archivo");
+        exit(1);
+    }
+}
+
+void write_encoded_bits_to_file_fork(wchar_t *buffer, size_t buffer_size, const char* filepath, struct MinHeapNode* huffmanRoot, struct HuffmanCode* huffmanCodes[], FILE *output_file, int pos, long array_init) {
+    
+    // Extract the name for the current file
+    const char* filename = extract_filename(filepath);
+    
+    // Get current position in output file (offset)
+    size_t offset = ftell(output_file);
+
+    // Read offsets array
+    fseek(output_file, array_init, SEEK_SET);
+    size_t offsets[MAX_TOTAL_BOOKS];
+
+    if (fread(offsets, sizeof(size_t), TOTAL_BOOKS, output_file) != TOTAL_BOOKS) {
+        perror("Error reading offsets array from file");
+        exit(EXIT_FAILURE);
+    }
+    
+    offsets[pos-1] = offset;
+    fwrite(offsets, sizeof(size_t), TOTAL_BOOKS, output_file);
+    
+    // Write metadata (filename and size) to the output file;
+    fseek(output_file, offset, SEEK_SET);
+
+    write_metadata(offset, filename, buffer_size, output_file);
+    
+    // Serialize Huffman tree and write it to the output file
+    serialize_huffman_tree(huffmanRoot, output_file);
+
+    // Compress data using Huffman codes and write it to the output file
+    
+    // Buffer to store bits before writing to file
+    unsigned char buffer_byte = 0; 
+    
+    // Number of bits currently buffered
+    int bit_count = 0;
+
+    // Iterate through the buffer character by character
+    for (size_t i = 0; i < buffer_size; ++i) {
+
+        // Get Huffman code for the current character
+        int* code = huffmanCodes[buffer[i]]->code;
+        int code_length = huffmanCodes[buffer[i]]->length; 
+
+        // Write Huffman code to the output buffer
+        for (int j = 0; j < code_length; ++j) {
+
+            // Append the current bit to the buffer
+            buffer_byte |= (code[j] << (7 - bit_count));
+            ++bit_count;
+
+            // If the buffer is full, write it to the file and reset it
+            if (bit_count == 8) {
+                fputc(buffer_byte, output_file);
+                buffer_byte = 0;
+                bit_count = 0;
+            }
+        }
+    }
+
+    // If there are remaining bits in the buffer, write them to the file
+    if (bit_count > 0) {
+        fputc(buffer_byte, output_file);
+    }
+}
+
 
 void write_encoded_bits_to_file(wchar_t *buffer, size_t buffer_size, const char* filepath, struct MinHeapNode* huffmanRoot, struct HuffmanCode* huffmanCodes[], FILE *output_file, size_t* offsetsPtr, int pos) {
     // Extract the name for the current file
