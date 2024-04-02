@@ -9,7 +9,7 @@
 
 int main() {
     // Folder Paths
-    const char* input_file = "out/bin/books_compressed_serial.bin";
+    const char* input_file = "out/bin/compressed.bin";
     
     FILE *binary_source = fopen(input_file, "rb");
     if (binary_source == NULL) {
@@ -28,9 +28,7 @@ int main() {
 
     // Decode 
     for (int i = 0; i < dirMetadata.numTxtFiles; i++) {
-        printf("Decompressing file [%d]: ", i+1);
         decompress_and_write_to_file(binary_source, dir_path, i+1);
-        printf("\n");
     }
 
     // Liberar la memoria asignada

@@ -44,7 +44,7 @@ void encode(char *input_file, char *freq_file, FILE *binary_output, int pos, siz
 int main() {
     // Folder Paths
     const char* booksFolder = "books";
-    const char* out = "out/bin/books_compressed_serial.bin";
+    const char* out = "out/bin/compressed.bin";
 
     FILE *binary_output = fopen(out, "wb");
     if (binary_output == NULL) {
@@ -67,13 +67,16 @@ int main() {
     // Offsets array to be populated
     size_t offsets[MAX_TOTAL_BOOKS] = {0};
 
-
     // Encode
     for (int i = 0; i < paths->fileCount; i++) {
-        printf("[%d] CODING : %s\n", i+1, paths->books[i]);
+        printf("[CODING #%d] %s\n", i+1, paths->books[i]);
         encode(paths->books[i], paths->freqs[i], binary_output, i+1, offsets);
-        printf("\n");
     }
+    
+    // Update the offsets array in the binary file
+    fseek(binary_output, offsets_pos, SEEK_SET);
+    fwrite(offsets, sizeof(size_t), paths->fileCount, binary_output);
+
 
     fclose(binary_output);
     free(paths);

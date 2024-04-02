@@ -22,7 +22,7 @@ int main() {
 
     // Folder Paths
     const char* booksFolder = "books";
-    const char* out = "out/bin/books_compressed_fork.bin";
+    const char* out = "out/bin/compressed.bin";
     
     FILE *binary_source = fopen(out, "rb");
 
@@ -37,8 +37,11 @@ int main() {
     const char* dir_result = create_output_dir(dirMetadata.directory);
     const char* dir_path = concat_strings(dir_result, "/");
 
+
+    // Track the number of active processes
+    int activeProcesses = 0; 
+    int miliseconds = 2;
     // Decode 
-    int activeProcesses = 0; // Track the number of active processes
     for (int i = 0; i < numOfProcess; i++) {
         // Wait until there are available process slots
         while (activeProcesses >= MAX_CONCURRENT_PROCESSES) {
@@ -47,13 +50,11 @@ int main() {
         }
 
         pid = fork();
-        
+        usleep(miliseconds * 100);
+
         // Código específico del proceso hijo
         if (pid == 0) {
-            printf("\n");
-            printf("[PID %d] DECODING : %s\n", i+1, paths->books[i]);
-            decompress_and_write_to_file(binary_source, dir_path, i+1);
-            printf("\n");
+            parallel_decompress(binary_source, dir_path, i+1, dirMetadata.offsets[i]);
             return 0;
         } else if (pid > 0) {
             activeProcesses++; // Increment active process count in the parent

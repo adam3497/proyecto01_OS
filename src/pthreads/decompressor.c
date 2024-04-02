@@ -17,6 +17,7 @@ pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 struct ThreadArgs {
     FILE *binarySource;
     const char* outputPath;
+    size_t offset;
     int pos;
 };
 
@@ -27,7 +28,7 @@ void* decode_book(void* arg) {
     pthread_mutex_lock(&mutex);
 
     // Perform decompression and write to file
-    decompress_and_write_to_file(args->binarySource, args->outputPath, args->pos);
+    parallel_decompress(args->binarySource, args->outputPath, args->pos, args->offset);
 
     // Unlock the mutex after accessing the binary source file
     pthread_mutex_unlock(&mutex);
@@ -40,7 +41,7 @@ void* decode_book(void* arg) {
 
 int main() {
     // Folder Paths
-    const char* input_file = "out/bin/books_compressed_pthread.bin";
+    const char* input_file = "out/bin/compressed.bin";
     
     FILE *binary_source = fopen(input_file, "rb");
     if (binary_source == NULL) {
@@ -59,7 +60,7 @@ int main() {
     const char* dir_path = concat_strings(dir_result, "/");
 
     // Initialize the semaphore with an initial value of 8
-    sem_init(&sem, 0, 8);
+    sem_init(&sem, 0, TOTAL_BOOKS);
 
     // Create an array of pthreads
     pthread_t threads[dirMetadata.numTxtFiles];
@@ -76,6 +77,7 @@ int main() {
         thread_args[i].binarySource = binary_source;
         thread_args[i].outputPath = dir_path;
         thread_args[i].pos = i+1;
+        thread_args[i].offset = dirMetadata.offsets[i];
 
         // Create a thread to decompress the file
         pthread_create(&threads[i], NULL, decode_book, (void*)&thread_args[i]);
