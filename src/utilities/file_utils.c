@@ -488,80 +488,6 @@ void read_metadata(size_t* offset, const char* filename, size_t* size, FILE* fil
     free(filename_buffer);
 }
 
-void parallel_decompress(FILE *source, const char *output_path, int pos, size_t init) {
-    
-    // Open binary file 
-    if (source == NULL) {
-        perror("Error opening binary file");
-        exit(EXIT_FAILURE);
-    }
-    
-    // Move to file to decompress
-    fseek(source, init, SEEK_SET);
-
-    // Read metadata (filename and size) from the input file
-    size_t file_size;
-    char filename[256];
-    size_t offset;
-    
-    read_metadata(&offset, filename, &file_size, source);
-    printf("[PID %d][DECODING #%d] %s\n", getpid(), pos, filename);
-
-    // Deserialize Huffman Tree from the binary file
-    struct MinHeapNode* huffmanRoot = deserialize_huffman_tree(source);
-    if (huffmanRoot == NULL) {
-        perror("Error allocating memory for Huffman tree node");
-        exit(EXIT_FAILURE);
-    }
-    struct MinHeapNode* currentNode = huffmanRoot;
-
-    // Set the locale to handle wide characters properly
-    setlocale(LC_ALL, "");
-    
-    // Concatenate output_path with filename to create the full file path
-    char file_path[256];
-    snprintf(file_path, sizeof(file_path), "%s/%s", output_path, filename);
-
-    // Open output file
-    FILE *output_file = fopen(file_path, "w+, ccs=UTF-8");
-
-    if (output_file == NULL) {
-        perror("Error opening output file");
-        fclose(source);
-        exit(EXIT_FAILURE);
-    }
-
-    // Read the encoded bits from the input file and decode them
-    unsigned char buffer;
-    size_t bytes_written = 0;
-    while (bytes_written < file_size) {
-        buffer = fgetc(source);
-        for (int i = 7; i >=0; --i) {
-            int bit = (buffer >> i) & 1;
-            if (bit == 0) {
-                currentNode = currentNode->left;
-            } else {
-                currentNode = currentNode->right;
-            }
-
-            // If we reach a leaf node (character node), write the character to the output file
-            if (!(currentNode->left) && !(currentNode->right)) {
-                fputwc(currentNode->data, output_file);
-                currentNode = huffmanRoot; // Reset to root for the next character
-                bytes_written++;
-                if (bytes_written >= file_size) {
-                    break;
-                }
-            }
-        }
-    }
-    
-    free_huffman_tree(huffmanRoot);
-    // Assert end of usage 
-    fclose(output_file);
-}
-
-
 /**
  * @param source: binary file to be decompressed
  * @param output_path: name of the output directory where the files are gonna be stored
@@ -579,7 +505,7 @@ void decompress_and_write_to_file(FILE *source, const char *output_path, int pos
     char filename[256];
     size_t offset;
     read_metadata(&offset, filename, &file_size, source);
-    printf("[DECODING #%d] %s\n", pos, filename);
+    printf("[PID %d][DECODING #%d] %s\n", getpid(), pos, filename);
 
     // Deserialize Huffman Tree from the binary file
     struct MinHeapNode* huffmanRoot = deserialize_huffman_tree(source);

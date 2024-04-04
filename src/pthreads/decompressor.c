@@ -28,7 +28,8 @@ void* decode_book(void* arg) {
     pthread_mutex_lock(&mutex);
 
     // Perform decompression and write to file
-    parallel_decompress(args->binarySource, args->outputPath, args->pos, args->offset);
+    fseek(args->binarySource, args->offset, SEEK_SET);
+    decompress_and_write_to_file(args->binarySource, args->outputPath, args->pos);
 
     // Unlock the mutex after accessing the binary source file
     pthread_mutex_unlock(&mutex);
