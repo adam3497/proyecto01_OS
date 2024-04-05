@@ -50,7 +50,7 @@ void get_wchars_from_file(const char *filename, wchar_t **buffer) {
     while ((wchar = fgetwc(file)) != WEOF) {
         // Check if the buffer needs to be reallocated
         if (num_chars_read > buffer_size - 1) {
-            buffer_size *= 2; // Double the buffer size
+            buffer_size += INITIAL_BUFFER_SIZE; // Increment buffer size
             wchar_t *new_buffer = (wchar_t *)realloc(*buffer, buffer_size * sizeof(wchar_t));
             if (new_buffer == NULL) {
                 perror("Error reallocating memory for the buffer");
