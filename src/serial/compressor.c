@@ -8,37 +8,37 @@
 #include "../huffman/freq.c"
 
 
-void encode(char *input_file, char *freq_file, FILE *binary_output, int pos, size_t* offsets){
-
-    // Fill the buffer
+void encode(char *input_file, char *freq_file, FILE *binary_output, size_t *offsets, int pos) {
+    // Variables al inicio
     wchar_t *buffer = NULL;
+    int freq_table[CHAR_SET_SIZE] = {0};
+    int freq_table_size;
+    struct MinHeapNode* huffmanRoot;
+    struct HuffmanCode* huffmanCodesArray[MAX_FREQ_TABLE_SIZE] = {NULL};
+    int bits[MAX_CODE_SIZE];
+    size_t buffer_size;
+
+    // Llenar el búfer
     get_wchars_from_file(input_file, &buffer);
 
-    // Extract the frequencies for each character in the text file
-    int freq_table[CHAR_SET_SIZE] = {0};
+    // Extraer las frecuencias para cada carácter en el archivo de texto
     char_frequencies(buffer, freq_table);
     
-    // Write the wchar and its frequency to the output file
-    //write_wchars_to_file(freq_file, freq_table);
+    // Calculamos el tamaño de la tabla de frecuencias (solo las frecuencias de caracteres > 0)
+    freq_table_size = calculateFreqTableSize(freq_table);
 
-    // We first calculate the size of the freq table (only the characters' freq > 0)
-    int freq_table_size = calculateFreqTableSize(freq_table);
+    // Construir el árbol de Huffman a partir de la tabla de frecuencias
+    huffmanRoot = buildHuffmanTree(freq_table, freq_table_size);
 
-    // Build Huffman Tree from the frequency table
-    struct MinHeapNode* huffmanRoot = buildHuffmanTree(freq_table, freq_table_size);
-
-    // Huffman codes struct array, where each position represents a character and the struct contains its code and code length
-    struct HuffmanCode* huffmanCodesArray[MAX_FREQ_TABLE_SIZE] = {NULL};
-    
-    // An array where the Huffman code for each character is gonna be stored
-    int bits[MAX_CODE_SIZE];
-
-    // Generate Huffman codes for each character in the text file
+    // Generar códigos Huffman para cada carácter en el archivo de texto
     generateHuffmanCodes(huffmanRoot, bits, 0, huffmanCodesArray);
 
-    // Write the Huffman Codes to file    
-    size_t buffer_size = wcslen(buffer);
+    // Escribir los códigos de Huffman en el archivo
+    buffer_size = wcslen(buffer);
     write_encoded_bits_to_file(buffer, buffer_size, input_file, huffmanRoot, huffmanCodesArray, binary_output, offsets, pos);
+
+    // Liberar memoria
+    free(buffer);
 }
 
 int main() {
@@ -70,7 +70,7 @@ int main() {
     // Encode
     for (int i = 0; i < paths->fileCount; i++) {
         printf("[CODING #%d] %s\n", i+1, paths->books[i]);
-        encode(paths->books[i], paths->freqs[i], binary_output, i+1, offsets);
+        encode(paths->books[i], paths->freqs[i], binary_output, offsets, i+1);
     }
     
     // Update the offsets array in the binary file
