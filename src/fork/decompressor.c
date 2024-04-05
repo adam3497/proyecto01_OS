@@ -5,18 +5,22 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <pthread.h>
-#include <time.h>
+
+
 #include <sys/wait.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+
 
 #include "../utilities/file_utils.c"
 #include "../huffman/huffman.c"
 #include "file_locks.c"
 
-#define MAX_CONCURRENT_PROCESSES 1 // Set the maximum number of concurrent processes
+#define SEM_1 "/sem_1"
 
 int main() {
+    pid_t pid;
+    
     int numOfProcess = TOTAL_BOOKS;
 
     // Folder Paths
@@ -36,43 +40,44 @@ int main() {
     const char* dir_result = create_output_dir(dirMetadata.directory);
     const char* dir_path = concat_strings(dir_result, "/");
 
+
     // Track the number of active processes
     int activeProcesses = 0; 
     int miliseconds = 150;
 
     // Decode 
     for (int i = 0; i < numOfProcess; i++) {
-        
-        // Wait until there are available process slots
-        while (activeProcesses >= MAX_CONCURRENT_PROCESSES) {
-            wait(NULL); 
-            activeProcesses--;
-        }
-
-        pid_t pid = fork();
+        pid = fork();
         
         // Código específico del proceso hijo
         if (pid == 0) {
-            // Move to file to decompress
-            size_t currentOffset = dirMetadata.offsets[i];
-            fseek(binary_source, currentOffset, SEEK_SET);
-            decompress_and_write_to_file(binary_source, dir_path, i+1);
-            printf("[PID %d][FINISHED #%d]\n", getpid(), i+1);
+            
+            // Abrir una nueva instancia del archivo fuente para cada proceso hijo
+            FILE *local_binary_source = fopen(out, "rb");
+            if (local_binary_source == NULL) {
+                perror("Error opening binary source file in child process");
+                exit(EXIT_FAILURE);
+            }
 
-            return 0;
-        } else if (pid > 0) {
-            activeProcesses++;
-        } else {
+            // Mover a la posición correcta del archivo para descomprimir
+            size_t currentOffset = dirMetadata.offsets[i];
+            fseek(local_binary_source, currentOffset, SEEK_SET);
+            decompress_and_write_to_file(local_binary_source, dir_path, i+1);
+            
+
+            fclose(local_binary_source); // Asegurarse de cerrar el archivo local
+            exit(EXIT_SUCCESS);
+
+        } else if (pid < 0) {
             // Error handling for fork failure
             fprintf(stderr, "Fork failed.\n");
             exit(EXIT_FAILURE);
         }
     }
     
-    // El padre espera a todos los hijos
-    while (activeProcesses > 0) {
+   // El padre espera a todos los hijos
+    for (int i = 0; i < numOfProcess; i++) {
         wait(NULL);
-        activeProcesses--;
     }
 
     // Liberar la memoria asignada

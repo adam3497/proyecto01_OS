@@ -3,10 +3,14 @@
 #include <string.h>
 #include <wchar.h>
 #include <unistd.h>
-#include <fcntl.h>
+
 #include <sys/wait.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+
+#include <fcntl.h>           /* For O_* constants */
+#include <sys/stat.h>        /* For mode constants */
+#include <semaphore.h>
 
 
 #include "../utilities/file_utils.c"
@@ -15,6 +19,8 @@
 #include "file_locks.c"
 
 #define SHM_SIZE (MAX_TOTAL_BOOKS * sizeof(size_t))
+#define SEM_1 "/sem_1"
+
 
 void encode(char *input_file, char *freq_file, FILE *binary_output, size_t *offsets, int pos){
 
@@ -26,9 +32,6 @@ void encode(char *input_file, char *freq_file, FILE *binary_output, size_t *offs
     int freq_table[CHAR_SET_SIZE] = {0};
     char_frequencies(buffer, freq_table);
     
-    // Write the wchar and its frequency to the output file
-    // write_wchars_to_file(freq_file, freq_table);
-
     // We first calculate the size of the freq table (only the characters' freq > 0)
     int freq_table_size = calculateFreqTableSize(freq_table);
 
@@ -51,10 +54,14 @@ void encode(char *input_file, char *freq_file, FILE *binary_output, size_t *offs
 }
 
 int main() {
+
+    int shmid;
+    pid_t pid;
+    sem_t *sem = NULL;
+    
+    size_t *offsets;
     
     // Use IPC_PRIVATE for simplicity (use a real key in production)
-    int shmid;
-    size_t *offsets;
     key_t key = IPC_PRIVATE;
     
     // Create shared memory segment
@@ -64,24 +71,21 @@ int main() {
     }
 
     // Attach shared memory segment to the process
+    
     if ((offsets = shmat(shmid, NULL, 0)) == (size_t *) -1) {
         perror("shmat");
         exit(EXIT_FAILURE);
     }
 
     // Initialize the array in the parent process
-    for (int i = 0; i < TOTAL_BOOKS; ++i) {
+    int numOfProcess = TOTAL_BOOKS;
+    for (int i = 0; i < MAX_TOTAL_BOOKS; ++i) {
         offsets[i] = 0;
     }
-
-    pid_t pid;
-    int numOfProcess = TOTAL_BOOKS;
-
+    
     // Folder Paths
     const char* booksFolder = "books";
     const char* out = "out/bin/compressed.bin";
-
-    int runs = TOTAL_BOOKS;
 
     FILE *binary_output = fopen(out, "wb");
     if (binary_output == NULL) {
@@ -100,34 +104,40 @@ int main() {
 
     // Write content metadata to binary file and get the position for the offsets array
     long offsets_pos = write_directory_metadata(binary_output, &dirMetadata);
-
+    
+    sem = sem_open(SEM_1, O_CREAT | O_EXCL, 0644, 1);
+     
     // Encode
     for (int i = 0; i < numOfProcess; i++) {
         pid = fork();
-        
+
         // Código específico del proceso hijo
         if (pid == 0) {
-            // Asegurarse de que solo este proceso escriba
-            set_lock(binary_output, F_WRLCK);
-
+            sem_wait(sem);
+            
             // Escribir
             printf("[PID %d][CODING #%d] %s\n", getpid(), i+1, paths->books[i]);
             encode(paths->books[i], paths->freqs[i], binary_output, offsets, i+1);
-    
-            // Liberar el archivo y evitar que los hijos creen más procesos
-            unlock_file(binary_output);
-            return 0;
+
+            sem_post(sem);
+            sem_close(sem);
+
+            exit(EXIT_SUCCESS);
+        } else if (pid < 0) {
+            // Error al crear el proceso hijo
+            perror("fork");
+            exit(EXIT_FAILURE);
         }
     }
-
+    
     // El padre espera a todos los hijos
-    while (numOfProcess > 0) {
+    for (int i = 0; i < numOfProcess; i++) {
         wait(NULL);
-        numOfProcess--;
     }
 
-    // Detach and remove shared memory segment
-    // Update the offsets array in the binary file
+    sem_close(sem);
+    sem_unlink(SEM_1);
+
     fseek(binary_output, offsets_pos, SEEK_SET);
     fwrite(offsets, sizeof(size_t), paths->fileCount, binary_output);
     

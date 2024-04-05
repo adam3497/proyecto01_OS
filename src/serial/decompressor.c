@@ -22,6 +22,7 @@ int main() {
     read_directory_metadata(&dirMetadata, binary_source);
 
     printf("Directory name: %s", dirMetadata.directory);
+
     // Create folder to store decompressed files
     const char* dir_result = create_output_dir(dirMetadata.directory);
     const char* dir_path = concat_strings(dir_result, "/");
