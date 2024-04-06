@@ -34,7 +34,7 @@ echo "Dependencies are satisfied."
 
 # Create directories
 echo "Creating directories..."
-mkdir -p out/bin out/decodes out/frequencies out/objects
+mkdir -p out/bin out/temp out/objects
 echo "Directories created successfully."
 
 # Run Makefile
