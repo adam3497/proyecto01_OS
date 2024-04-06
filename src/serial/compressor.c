@@ -8,7 +8,7 @@
 #include "../huffman/freq.c"
 
 
-void encode(char *input_file, char *freq_file, FILE *binary_output, size_t *offsets, int pos) {
+void encode(char *input_file, FILE *binary_output, size_t *offsets, int pos) {
     // Variables al inicio
     wchar_t *buffer = NULL;
     int freq_table[CHAR_SET_SIZE] = {0};
@@ -70,7 +70,7 @@ int main() {
     // Encode
     for (int i = 0; i < paths->fileCount; i++) {
         printf("[CODING #%d] %s\n", i+1, paths->books[i]);
-        encode(paths->books[i], paths->freqs[i], binary_output, offsets, i+1);
+        encode(paths->books[i], binary_output, offsets, i+1);
     }
     
     // Update the offsets array in the binary file
