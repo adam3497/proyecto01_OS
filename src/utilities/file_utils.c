@@ -563,9 +563,6 @@ void decompress_and_write_to_file(FILE *source, const char *output_path, int pos
 
 
 struct EncodeArgs* getAllPaths(const char* booksFolder){
-    
-    const char* freqsFolder = "out/frequencies";
-    const char* decodesFolder = "out/decodes";
 
     // Array dinámico para almacenar los nombres de los libros
     int fileCounter = 0;
@@ -587,21 +584,8 @@ struct EncodeArgs* getAllPaths(const char* booksFolder){
             snprintf(bookPath, sizeof(bookPath), "%s/%s", booksFolder, entrada->d_name);
             strncpy(args->books[fileCounter], bookPath, MAX_BOOK_NAME_LENGTH - 1);
 
-            // Frequencies output paths
-            char frequenciesPath[MAX_BOOK_NAME_LENGTH];
-            snprintf(frequenciesPath, sizeof(frequenciesPath), "%s/%s", freqsFolder, entrada->d_name);
-            strncpy(args->freqs[fileCounter], frequenciesPath, MAX_BOOK_NAME_LENGTH - 1);
-
-            // Decode paths (output)
-            char decodesPath[MAX_BOOK_NAME_LENGTH];
-            snprintf(decodesPath, sizeof(decodesPath), "%s/%s", decodesFolder, entrada->d_name);
-            strncpy(args->decodes[fileCounter], decodesPath, MAX_BOOK_NAME_LENGTH - 1);
-
             // Save atributes
-            args->books[fileCounter][MAX_BOOK_NAME_LENGTH - 1] = '\0';
-            args->freqs[fileCounter][MAX_BOOK_NAME_LENGTH - 1] = '\0';
-            args->decodes[fileCounter][MAX_BOOK_NAME_LENGTH - 1] = '\0';
-            
+            args->books[fileCounter][MAX_BOOK_NAME_LENGTH - 1] = '\0';                        
             fileCounter++;
         }
     }
