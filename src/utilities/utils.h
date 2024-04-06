@@ -74,11 +74,8 @@ void read_metadata(size_t* offset, const char* filename, size_t* size, FILE* fil
 void decompress_and_write_to_file(FILE *source, const char *output_path, int pos);
 
 
-
 struct EncodeArgs {
     char books[TOTAL_BOOKS][MAX_BOOK_NAME_LENGTH];
-    char freqs[TOTAL_BOOKS][MAX_BOOK_NAME_LENGTH];
-    char decodes[TOTAL_BOOKS][MAX_BOOK_NAME_LENGTH];
     int fileCount;
 };
 
