@@ -1,83 +1,66 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <wchar.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include <pthread.h>
-#include <time.h>
-#include <sys/wait.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
 
 #include "../utilities/file_utils.c"
 #include "../huffman/huffman.c"
-#include "file_locks.c"
 
-#define MAX_CONCURRENT_PROCESSES 1 // Set the maximum number of concurrent processes
+#define SEM_1 "/sem_1"
 
 int main() {
-    int numOfProcess = TOTAL_BOOKS;
-
-    // Folder Paths
-    const char* booksFolder = "books";
-    const char* out = "out/bin/compressed.bin";
-    
-    FILE *binary_source = fopen(out, "rb");
-
-    // Set for every book in books folder
-    struct EncodeArgs *paths = getAllPaths(booksFolder);
-    
-    // Read directory metadata, it also reads the offsets for decompression
+    pid_t pid;
+    int numOfProcess;
     struct DirectoryMetadata dirMetadata;
+    FILE *binary_source;
+    const char *dir_result, *dir_path, *output_path;
+
+    // Ruta del archivo de salida
+    output_path = "out/bin/compressed.bin";
+    
+    // Leer los metadatos del directorio, también lee los offsets para la descompresión
+    binary_source = fopen(output_path, "rb");
+    if (!binary_source) {
+        perror("Failed to open output_path");
+        exit(EXIT_FAILURE);
+    }
     read_directory_metadata(&dirMetadata, binary_source);
+    fclose(binary_source);
 
-    // Create folder to store decompressed files
-    const char* dir_result = create_output_dir(dirMetadata.directory);
-    const char* dir_path = concat_strings(dir_result, "/");
+    // Crear carpeta para almacenar archivos descomprimidos
+    dir_result = create_output_dir(dirMetadata.directory);
+    dir_path = concat_strings(dir_result, "/");
 
-    // Track the number of active processes
-    int activeProcesses = 0; 
-    int miliseconds = 150;
-
-    // Decode 
+    // Decodificar utilizando múltiples procesos
+    numOfProcess = dirMetadata.numTxtFiles;
     for (int i = 0; i < numOfProcess; i++) {
+        pid = fork();
         
-        // Wait until there are available process slots
-        while (activeProcesses >= MAX_CONCURRENT_PROCESSES) {
-            wait(NULL); 
-            activeProcesses--;
-        }
-
-        pid_t pid = fork();
-        
-        // Código específico del proceso hijo
-        if (pid == 0) {
-            // Move to file to decompress
+        if (pid == 0) { // Proceso hijo
+            FILE *local_binary_source = fopen(output_path, "rb");
+            if (!local_binary_source) {
+                perror("Error opening binary source file in child process");
+                exit(EXIT_FAILURE);
+            }
+            
             size_t currentOffset = dirMetadata.offsets[i];
-            fseek(binary_source, currentOffset, SEEK_SET);
-            decompress_and_write_to_file(binary_source, dir_path, i+1);
-            printf("[PID %d][FINISHED #%d]\n", getpid(), i+1);
-
-            return 0;
-        } else if (pid > 0) {
-            activeProcesses++;
-        } else {
-            // Error handling for fork failure
-            fprintf(stderr, "Fork failed.\n");
+            fseek(local_binary_source, currentOffset, SEEK_SET);
+            decompress_and_write_to_file(local_binary_source, dir_path, i + 1);
+            
+            fclose(local_binary_source);
+            exit(EXIT_SUCCESS);
+        } else if (pid < 0) { // Manejo de errores de fork
+            perror("Fork failed");
             exit(EXIT_FAILURE);
         }
     }
     
-    // El padre espera a todos los hijos
-    while (activeProcesses > 0) {
+    // El proceso padre espera a todos los hijos
+    while (numOfProcess > 0) {
         wait(NULL);
-        activeProcesses--;
+        numOfProcess--;
     }
 
-    // Liberar la memoria asignada
-    fclose(binary_source);
-    free(paths);
-    
     return EXIT_SUCCESS;
 }

@@ -14,7 +14,6 @@ serial:
 
 # Regla para compilar programa fork
 fork:
-	gcc -c src/fork/file_locks.c -o out/objects/file_locks
 	gcc src/fork/compressor.c -o out/objects/fork_compressor
 	gcc src/fork/decompressor.c -o out/objects/fork_decompressor
 
@@ -30,3 +29,4 @@ clean:
 	rm -f out/books/*
 	rm -f out/decodes/*
 	rm -f out/objects/*
+	rm -f out/temp/*
