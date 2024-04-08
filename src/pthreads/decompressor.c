@@ -91,5 +91,6 @@ int main() {
 
     // Liberar la memoria asignada
     fclose(binary_source);
+    pthread_mutex_destroy(&mutex);
     return EXIT_SUCCESS;
 }

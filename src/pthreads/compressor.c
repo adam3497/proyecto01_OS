@@ -136,5 +136,6 @@ int main() {
 
     fclose(binary_output);
     free(paths);
+    pthread_mutex_destroy(&mutex);
     return EXIT_SUCCESS;
 }
