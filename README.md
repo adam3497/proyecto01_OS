@@ -107,3 +107,15 @@ Si se desea ejecutar solamente el codificador o descodificador:
 o 
 
 > $ ./pthread_run.sh decompressor
+
+
+## Problemas
+
+Si existe un problema a la hora de ejecutar alguno de los archivos .sh, seguramente el problema recae en la falta de permisos. Ejecutando el siguiente comando se puede solucionar el problema:
+
+Archivo: `install.sh`
+> $ chmod +x install.sh  
+> $ sudo chmod u+s install.sh
+
+Los otros archivos:
+> $ chmod +x serial_run.sh fork_run.sh pthread_run.sh
